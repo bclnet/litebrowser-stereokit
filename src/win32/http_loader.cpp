@@ -1,14 +1,14 @@
-#include "tordexhttp.h"
-
+#define UNICODE
+#include "http_loader.h"
 #pragma comment(lib, "winhttp.lib")
 
-tordex::http::http() {
+http_loader::http_loader() {
 	m_hSession = NULL;
 	m_maxConnectionsPerServer = 5;
 	InitializeCriticalSectionAndSpinCount(&m_sync, 1000);
 }
 
-tordex::http::~http() {
+http_loader::~http_loader() {
 	stop();
 	if (m_hSession) {
 		WinHttpCloseHandle(m_hSession);
@@ -16,12 +16,12 @@ tordex::http::~http() {
 	DeleteCriticalSection(&m_sync);
 }
 
-BOOL tordex::http::open(LPCWSTR pwszUserAgent, DWORD dwAccessType, LPCWSTR pwszProxyName, LPCWSTR pwszProxyBypass) {
+BOOL http_loader::open(LPCWSTR pwszUserAgent, DWORD dwAccessType, LPCWSTR pwszProxyName, LPCWSTR pwszProxyBypass) {
 	m_hSession = WinHttpOpen(pwszUserAgent, dwAccessType, pwszProxyName, pwszProxyBypass, WINHTTP_FLAG_ASYNC);
 	if (m_hSession) {
 		WinHttpSetOption(m_hSession, WINHTTP_OPTION_MAX_CONNS_PER_SERVER, &m_maxConnectionsPerServer, sizeof(m_maxConnectionsPerServer));
 
-		if (WinHttpSetStatusCallback(m_hSession, (WINHTTP_STATUS_CALLBACK)tordex::http::http_callback, WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS, 0) != WINHTTP_INVALID_STATUS_CALLBACK) {
+		if (WinHttpSetStatusCallback(m_hSession, (WINHTTP_STATUS_CALLBACK)http_loader::http_callback, WINHTTP_CALLBACK_FLAG_ALL_NOTIFICATIONS, 0) != WINHTTP_INVALID_STATUS_CALLBACK) {
 			return TRUE;
 		}
 	}
@@ -31,14 +31,14 @@ BOOL tordex::http::open(LPCWSTR pwszUserAgent, DWORD dwAccessType, LPCWSTR pwszP
 	return FALSE;
 }
 
-void tordex::http::close() {
+void http_loader::close() {
 	if (m_hSession) {
 		WinHttpCloseHandle(m_hSession);
 		m_hSession = NULL;
 	}
 }
 
-VOID CALLBACK tordex::http::http_callback(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus, LPVOID lpvStatusInformation, DWORD dwStatusInformationLength) {
+VOID CALLBACK http_loader::http_callback(HINTERNET hInternet, DWORD_PTR dwContext, DWORD dwInternetStatus, LPVOID lpvStatusInformation, DWORD dwStatusInformationLength) {
 	CoInitialize(NULL);
 
 	DWORD dwError = ERROR_SUCCESS;
@@ -68,7 +68,7 @@ VOID CALLBACK tordex::http::http_callback(HINTERNET hInternet, DWORD_PTR dwConte
 	CoUninitialize();
 }
 
-BOOL tordex::http::download_file(LPCWSTR url, http_request* request) {
+BOOL http_loader::download_file(LPCWSTR url, http_request* request) {
 	if (request) {
 		request->set_parent(this);
 		if (request->create(url, m_hSession)) {
@@ -81,7 +81,7 @@ BOOL tordex::http::download_file(LPCWSTR url, http_request* request) {
 	return FALSE;
 }
 
-void tordex::http::remove_request(http_request* request) {
+void http_loader::remove_request(http_request* request) {
 	bool is_ok = false;
 	lock();
 	for (http_request::vector::iterator i = m_requests.begin(); i != m_requests.end(); i++) {
@@ -97,7 +97,7 @@ void tordex::http::remove_request(http_request* request) {
 	}
 }
 
-void tordex::http::stop() {
+void http_loader::stop() {
 	lock();
 
 	for (http_request::vector::iterator i = m_requests.begin(); i != m_requests.end(); i++) {
@@ -110,7 +110,7 @@ void tordex::http::stop() {
 //////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////////////////////////////////
 
-tordex::http_request::http_request() {
+http_request::http_request() {
 	m_status = 0;
 	m_error = 0;
 	m_downloaded_length = 0;
@@ -122,12 +122,12 @@ tordex::http_request::http_request() {
 	InitializeCriticalSection(&m_sync);
 }
 
-tordex::http_request::~http_request() {
+http_request::~http_request() {
 	cancel();
 	DeleteCriticalSection(&m_sync);
 }
 
-BOOL tordex::http_request::create(LPCWSTR url, HINTERNET hSession) {
+BOOL http_request::create(LPCWSTR url, HINTERNET hSession) {
 	m_url = url;
 	m_error = ERROR_SUCCESS;
 
@@ -192,7 +192,7 @@ BOOL tordex::http_request::create(LPCWSTR url, HINTERNET hSession) {
 	return TRUE;
 }
 
-void tordex::http_request::cancel() {
+void http_request::cancel() {
 	lock();
 	if (m_hRequest) {
 		WinHttpCloseHandle(m_hRequest);
@@ -205,7 +205,7 @@ void tordex::http_request::cancel() {
 	unlock();
 }
 
-DWORD tordex::http_request::onSendRequestComplete() {
+DWORD http_request::onSendRequestComplete() {
 	lock();
 	DWORD dwError = ERROR_SUCCESS;
 
@@ -218,7 +218,7 @@ DWORD tordex::http_request::onSendRequestComplete() {
 	return dwError;
 }
 
-DWORD tordex::http_request::onHeadersAvailable() {
+DWORD http_request::onHeadersAvailable() {
 	lock();
 
 	DWORD dwError = ERROR_SUCCESS;
@@ -249,7 +249,7 @@ DWORD tordex::http_request::onHeadersAvailable() {
 	return dwError;
 }
 
-DWORD tordex::http_request::onHandleClosing() {
+DWORD http_request::onHandleClosing() {
 	WCHAR errMsg[255];
 	errMsg[0] = 0;
 
@@ -263,12 +263,12 @@ DWORD tordex::http_request::onHandleClosing() {
 	return ERROR_SUCCESS;
 }
 
-DWORD tordex::http_request::onRequestError(DWORD dwError) {
+DWORD http_request::onRequestError(DWORD dwError) {
 	m_error = dwError;
 	return m_error;
 }
 
-DWORD tordex::http_request::readData() {
+DWORD http_request::readData() {
 	DWORD dwError = ERROR_SUCCESS;
 
 	if (!WinHttpReadData(m_hRequest, m_buffer, sizeof(m_buffer), NULL)) {
@@ -278,7 +278,7 @@ DWORD tordex::http_request::readData() {
 	return dwError;
 }
 
-DWORD tordex::http_request::onReadComplete(DWORD len) {
+DWORD http_request::onReadComplete(DWORD len) {
 	DWORD dwError = ERROR_SUCCESS;
 
 	if (len != 0) {
@@ -295,11 +295,11 @@ DWORD tordex::http_request::onReadComplete(DWORD len) {
 	return dwError;
 }
 
-void tordex::http_request::add_ref() {
+void http_request::add_ref() {
 	InterlockedIncrement(&m_refCount);
 }
 
-void tordex::http_request::release() {
+void http_request::release() {
 	LONG lRefCount;
 	lRefCount = InterlockedDecrement(&m_refCount);
 	if (lRefCount == 0) {
@@ -307,9 +307,9 @@ void tordex::http_request::release() {
 	}
 }
 
-void tordex::http_request::set_parent(http* parent) {
+void http_request::set_parent(http_loader* parent) {
 	m_http = parent;
 }
 
-void tordex::http_request::OnHeadersReady(HINTERNET hRequest) {
+void http_request::OnHeadersReady(HINTERNET hRequest) {
 }

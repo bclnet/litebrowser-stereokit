@@ -214,7 +214,7 @@ void CToolbarWnd::OnSize(int width, int height) {
 void CToolbarWnd::OnDestroy() {
 }
 
-void CToolbarWnd::create(int x, int y, int width, HWND parent) {
+void CToolbarWnd::create(int x, int y, int width, int parent) {
 	LPSTR html = NULL;
 
 	HRSRC hResource = ::FindResource(m_hInst, L"toolbar.html", RT_HTML);

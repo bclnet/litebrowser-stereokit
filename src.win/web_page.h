@@ -2,15 +2,15 @@
 
 #include "../containers/cairo/cairo_container.h"
 #include "../containers/cairo/cairo_font.h"
-#include "win32/http_loader.h"
+#include "tordexhttp.h"
 
-class htmlview_wnd;
+class CHTMLViewWnd;
 
 class web_page : public cairo_container {
-	htmlview_wnd* m_parent;
+	CHTMLViewWnd* m_parent;
 	LONG						m_refCount;
 public:
-	http_loader					m_http;
+	tordex::http				m_http;
 	std::wstring				m_url;
 	litehtml::document::ptr		m_doc;
 	std::wstring				m_caption;
@@ -20,7 +20,7 @@ public:
 	std::wstring				m_waited_file;
 	std::wstring				m_hash;
 public:
-	web_page(htmlview_wnd* parent);
+	web_page(CHTMLViewWnd* parent);
 	virtual ~web_page();
 
 	void load(LPCWSTR url);
@@ -56,7 +56,7 @@ enum web_file_type {
 	web_file_waited,
 };
 
-class web_file : public http_request {
+class web_file : public tordex::http_request {
 	WCHAR			m_file[MAX_PATH];
 	web_page* m_page;
 	web_file_type	m_type;

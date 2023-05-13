@@ -1,8 +1,8 @@
 #include "globals.h"
-#include "htmlview_wnd.h"
 #include "web_page.h"
+#include "HtmlViewWnd.h"
 
-web_page::web_page(htmlview_wnd* parent) {
+web_page::web_page(CHTMLViewWnd* parent) {
 	m_refCount = 1;
 	m_parent = parent;
 	m_http.open(L"litebrowser/1.0", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS);
@@ -174,7 +174,7 @@ void web_page::on_document_loaded(LPCWSTR file, LPCWSTR encoding, LPCWSTR realUr
 	m_doc = litehtml::document::createFromString(html_text, this);
 	delete html_text;
 
-	//PostMessage(m_parent->wnd(), WM_PAGE_LOADED, 0, 0);
+	PostMessage(m_parent->wnd(), WM_PAGE_LOADED, 0, 0);
 }
 
 void web_page::on_document_error(DWORD dwError, LPCWSTR errMsg) {
@@ -188,7 +188,7 @@ void web_page::on_document_error(DWORD dwError, LPCWSTR errMsg) {
 	}
 	m_doc = litehtml::document::createFromString(txt.c_str(), this);
 
-	//PostMessage(m_parent->wnd(), WM_PAGE_LOADED, 0, 0);
+	PostMessage(m_parent->wnd(), WM_PAGE_LOADED, 0, 0);
 }
 
 void web_page::on_image_loaded(LPCWSTR file, LPCWSTR url, bool redraw_only) {
@@ -196,7 +196,7 @@ void web_page::on_image_loaded(LPCWSTR file, LPCWSTR url, bool redraw_only) {
 	if (img->load(file)) {
 		cairo_container::add_image(std::wstring(url), img);
 		if (m_doc) {
-			//PostMessage(m_parent->wnd(), WM_IMAGE_LOADED, (WPARAM)(redraw_only ? 1 : 0), 0);
+			PostMessage(m_parent->wnd(), WM_IMAGE_LOADED, (WPARAM)(redraw_only ? 1 : 0), 0);
 		}
 	}
 }

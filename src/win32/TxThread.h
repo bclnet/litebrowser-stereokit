@@ -1,14 +1,14 @@
 #pragma once
 
-class CTxThread {
+class TxThread {
 	HANDLE	m_hThread;
 	HANDLE	m_hStop;
 	DWORD	m_trdID;
 
 	static DWORD WINAPI sThreadProc(LPVOID lpParameter);
 public:
-	CTxThread();
-	virtual ~CTxThread();
+	TxThread();
+	virtual ~TxThread();
 	virtual DWORD ThreadProc() = 0;
 
 	DWORD	getID() { return m_trdID; }

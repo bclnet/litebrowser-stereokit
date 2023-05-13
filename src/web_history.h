@@ -12,4 +12,9 @@ public:
 	void url_opened(const std::wstring& url);
 	bool back(std::wstring& url);
 	bool forward(std::wstring& url);
+	std::wstring current() const {
+		return m_current_item >= 0 && m_current_item < m_items.size()
+			? m_items[m_current_item]
+			: L"";
+	}
 };

@@ -1,10 +1,9 @@
 #pragma once
 
-#define ISOLATION_AWARE_ENABLED		1
+#if defined(_WIN32) || defined(WIN32)
 
-#define GDIPVER	0x0110
-
-#include "targetver.h"
+//#define UNICODE
+#define ISOLATION_AWARE_ENABLED 1
 #include <windows.h>
 #include <stdlib.h>
 #include <malloc.h>
@@ -17,18 +16,41 @@
 #include <winhttp.h>
 #include <algorithm>
 
-// include TxDIB project
-#include <TxDIB.h>
-#pragma comment(lib, "txdib.lib")
+//#include <TxDIB.h>
+//#include <cairo.h>
+//#include <cairo-win32.h>
+//#include <dib.h>
 
-// include CAIRO project
+#else
+
+#include <fstream>
+#include <string>
+#include <cerrno>
+#include <clocale>
+#include <vector>
+#include <iostream>
+#include <cstdlib>
+#ifdef __APPLE__
+#include <stdlib.h>
+#else
+#include <malloc.h>
+#endif
+#include <memory.h>
+#define _USE_MATH_DEFINES
+#include <cmath>
 #include <cairo.h>
-#include <cairo-win32.h>
-#pragma comment(lib, "cairo.lib")
+#include <litehtml.h>
+#include <ft2build.h>
+#include FT_FREETYPE_H
+#include <fontconfig/fontconfig.h>
+#include <cairo-ft.h>
+#include <cairomm/context.h>
+#include <curl/curl.h>
+#include <Poco/URI.h>
 
-// include SIMPLEDIB project
-#include <dib.h>
-#pragma comment(lib, "simpledib.lib")
+#endif
 
-#pragma comment(lib, "shlwapi.lib")
-#pragma comment(lib, "Msimg32.lib")
+#include <stereokit.h>
+#include <stereokit_ui.h>
+#include "utils.h"
+using namespace sk;
