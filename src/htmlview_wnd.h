@@ -8,28 +8,26 @@
 using namespace litehtml;
 class browser_wnd;
 
-class htmlview_wnd {
-	pose_t m_pose = { };
-	bounds_t m_bounds = { };
-	int							m_hWnd;
-	int							m_hInst;
+class htmlview_wnd : public WND {
+	XWND						m_hWnd;
+	XINSTANCE					m_hInst;
 	int							m_top;
 	int							m_left;
 	int							m_max_top;
 	int							m_max_left;
 	web_history					m_history;
-	web_page* m_page;
-	web_page* m_page_next;
+	web_page*					m_page;
+	web_page*					m_page_next;
 	CRITICAL_SECTION			m_sync;
-	simpledib::dib			m_dib;
+	simpledib::dib				m_dib;
 	browser_wnd* m_parent;
 public:
-	htmlview_wnd(int hInst, browser_wnd* parent);
+	htmlview_wnd(XINSTANCE hInst, browser_wnd* parent);
 	virtual ~htmlview_wnd(void);
 
-	void				create(int x, int y, int width, int height, int parent);
+	void				create(int x, int y, int z, int width, int height, int depth, XWND parent);
 	void				open(LPCWSTR url, bool reload = FALSE);
-	int					wnd() { return m_hWnd; }
+	XWND				wnd() { return m_hWnd; }
 	void				refresh();
 	void				back();
 	void				forward();
@@ -38,7 +36,7 @@ public:
 	void				lock();
 	void				unlock();
 	bool				is_valid_page(bool with_lock = true);
-	web_page* get_page(bool with_lock = true);
+	web_page*			get_page(bool with_lock = true);
 
 	void				render(BOOL calc_time = FALSE, BOOL do_redraw = TRUE, int calc_repeat = 1);
 	void				get_client_rect(litehtml::position& client) const;
@@ -68,7 +66,7 @@ protected:
 	void				scroll_to(int new_left, int new_top);
 
 private:
-	static LRESULT	CALLBACK WndProc(int hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam);
+	static LRESULT	CALLBACK WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam);
 };
 
 inline void htmlview_wnd::lock() {

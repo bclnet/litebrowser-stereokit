@@ -13,8 +13,126 @@ toolbar_wnd::toolbar_wnd(int hInst, browser_wnd* parent) {
 toolbar_wnd::~toolbar_wnd(void) {
 }
 
-LRESULT CALLBACK toolbar_wnd::WndProc(int hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
-	return 0;
+LRESULT CALLBACK toolbar_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
+	toolbar_wnd* pThis = (toolbar_wnd*)lParam;
+	if (pThis || uMessage == WM_CREATE) {
+		switch (uMessage) {
+		case WM_EDIT_CAPTURE:
+			if (wParam) {
+				//SetCaptureX(hWnd);
+				pThis->m_inCapture = TRUE;
+			}
+			else {
+				//ReleaseCaptureX();
+				pThis->m_inCapture = FALSE;
+			}
+			break;
+		case WM_EDIT_ACTIONKEY:
+			switch (wParam) {
+			case VK_RETURN: {
+				std::wstring url = pThis->m_omnibox->get_url();
+				pThis->m_omnibox->select_all();
+				pThis->m_parent->open(url.c_str());
+				break;
+			}
+			}
+			return 0;
+		case WM_OMNIBOX_CLICKED:
+			pThis->OnOmniboxClicked();
+			break;
+		case WM_UPDATE_CONTROL: {
+			LPRECTX rcDraw = (LPRECTX)lParam;
+			InvalidateRectX(hWnd, rcDraw, FALSE);
+			break;
+		}
+		case WM_SETCURSOR:
+			pThis->update_cursor();
+			break;
+		case WM_ERASEBKGND:
+			return TRUE;
+		case WM_CREATE: {
+			LPCREATESTRUCT lpcs = (LPCREATESTRUCT)lParam;
+			pThis = (toolbar_wnd*)(lpcs->lpCreateParams);
+			SetPropX(hWnd, TEXT("toolbar_this"), (HANDLE)pThis);
+			pThis->m_hWnd = hWnd;
+			pThis->OnCreate();
+			break;
+		}
+		case WM_PAINT: {
+			//PAINTSTRUCT ps;
+			//HDC hdc = BeginPaint(hWnd, &ps);
+
+			//simpledib::dib dib;
+
+			//dib.beginPaint(hdc, &ps.rcPaint);
+			//pThis->OnPaint(&dib, &ps.rcPaint);
+			//dib.endPaint();
+
+			//EndPaint(hWnd, &ps);
+			return 0;
+		}
+		case WM_KILLFOCUS:
+			if (pThis->m_omnibox && pThis->m_omnibox->have_focus()) {
+				pThis->m_omnibox->KillFocus();
+			}
+			break;
+		case WM_SIZE:
+			pThis->OnSize(LOWORD(lParam), HIWORD(lParam));
+			return 0;
+		case WM_DESTROY:
+			RemovePropX(hWnd, TEXT("toolbar_this"));
+			pThis->OnDestroy();
+			delete pThis;
+			return 0;
+		case WM_MOUSEMOVE: {
+			//TRACKMOUSEEVENT tme;
+			//ZeroMemory(&tme, sizeof(TRACKMOUSEEVENT));
+			//tme.cbSize = sizeof(TRACKMOUSEEVENT);
+			//tme.dwFlags = TME_QUERY;
+			//tme.hwndTrack = hWnd;
+			//TrackMouseEvent(&tme);
+			//if (!(tme.dwFlags & TME_LEAVE)) {
+			//	tme.dwFlags = TME_LEAVE;
+			//	tme.hwndTrack = hWnd;
+			//	TrackMouseEvent(&tme);
+			//}
+			pThis->OnMouseMove(GET_X_LPARAMX(lParam), GET_Y_LPARAMX(lParam));
+			return 0;
+		}
+		case WM_MOUSELEAVE:
+			pThis->OnMouseLeave();
+			return 0;
+		case WM_LBUTTONDOWN:
+			pThis->OnLButtonDown(GET_X_LPARAMX(lParam), GET_Y_LPARAMX(lParam));
+			return 0;
+		case WM_LBUTTONUP:
+			pThis->OnLButtonUp(GET_X_LPARAMX(lParam), GET_Y_LPARAMX(lParam));
+			return 0;
+		case WM_KEYDOWN:
+			if (pThis->m_omnibox && pThis->m_omnibox->have_focus()) {
+				if (pThis->m_omnibox->OnKeyDown(wParam, lParam)) {
+					return 0;
+				}
+			}
+			break;
+		case WM_KEYUP:
+			if (pThis->m_omnibox && pThis->m_omnibox->have_focus()) {
+				if (pThis->m_omnibox->OnKeyUp(wParam, lParam)) {
+					return 0;
+				}
+			}
+			break;
+		case WM_CHAR:
+			if (pThis->m_omnibox && pThis->m_omnibox->have_focus()) {
+				if (pThis->m_omnibox->OnChar(wParam, lParam)) {
+					return 0;
+				}
+			}
+			break;
+		}
+	}
+
+	return DefWindowProcX(hWnd, uMessage, wParam, lParam);
 }
 
 void toolbar_wnd::render_toolbar(int width) {
@@ -68,7 +186,7 @@ void toolbar_wnd::OnSize(int width, int height) {
 void toolbar_wnd::OnDestroy() {
 }
 
-void toolbar_wnd::create(int x, int y, int width, int parent) {
+void toolbar_wnd::create(int x, int y, int z, int width, XWND parent) {
 	LPSTR html = NULL;
 
 	//HRSRC hResource = ::FindResource(m_hInst, L"toolbar.html", RT_HTML);
@@ -83,12 +201,12 @@ void toolbar_wnd::create(int x, int y, int width, int parent) {
 	//		}
 	//	}
 	//}
-	m_hWnd = 1; // CreateWindow(TOOLBARWND_CLASS, L"toolbar", WS_CHILD | WS_VISIBLE, x, y, width, 1, parent, NULL, m_hInst, (LPVOID)this);
+	m_hWnd = CreateWindowX(L"toolbar", x, y, z, width, 1, 1, parent, NULL, m_hInst, (LPVOID)this, (WNDPROC)toolbar_wnd::WndProc);
 
 	m_doc = litehtml::document::createFromString(html, this, "html,div,body { display: block; } head,style { display: none; }");
 	delete html;
 	render_toolbar(width);
-	//MoveWindow(m_hWnd, x, y, width, m_doc->height(), TRUE);
+	MoveWindowX(m_hWnd, x, y, width, m_doc->height(), TRUE);
 }
 
 void toolbar_wnd::make_url(LPCWSTR url, LPCWSTR basepath, std::wstring& out) {
@@ -138,14 +256,14 @@ void toolbar_wnd::OnMouseMove(int x, int y) {
 			litehtml::position::vector redraw_boxes;
 			if (m_doc->on_mouse_over(x, y, x, y, redraw_boxes)) {
 				for (litehtml::position::vector::iterator box = redraw_boxes.begin(); box != redraw_boxes.end(); box++) {
-					RECT rcRedraw;
+					RECTX rcRedraw;
 					rcRedraw.left = box->left();
 					rcRedraw.right = box->right();
 					rcRedraw.top = box->top();
 					rcRedraw.bottom = box->bottom();
-					//InvalidateRect(m_hWnd, &rcRedraw, TRUE);
+					InvalidateRectX(m_hWnd, &rcRedraw, TRUE);
 				}
-				//UpdateWindow(m_hWnd);
+				UpdateWindowX(m_hWnd);
 			}
 		}
 	}
@@ -157,20 +275,20 @@ void toolbar_wnd::OnMouseLeave() {
 		litehtml::position::vector redraw_boxes;
 		if (m_doc->on_mouse_leave(redraw_boxes)) {
 			for (litehtml::position::vector::iterator box = redraw_boxes.begin(); box != redraw_boxes.end(); box++) {
-				RECT rcRedraw;
+				RECTX rcRedraw;
 				rcRedraw.left = box->left();
 				rcRedraw.right = box->right();
 				rcRedraw.top = box->top();
 				rcRedraw.bottom = box->bottom();
-				//InvalidateRect(m_hWnd, &rcRedraw, TRUE);
+				InvalidateRectX(m_hWnd, &rcRedraw, TRUE);
 			}
-			//UpdateWindow(m_hWnd);
+			UpdateWindowX(m_hWnd);
 		}
 	}
 }
 
 void toolbar_wnd::OnOmniboxClicked() {
-	//SetFocus(m_hWnd);
+	SetFocusX(m_hWnd);
 	m_omnibox->SetFocus();
 }
 
@@ -184,14 +302,14 @@ void toolbar_wnd::OnLButtonDown(int x, int y) {
 			litehtml::position::vector redraw_boxes;
 			if (m_doc->on_lbutton_down(x, y, x, y, redraw_boxes)) {
 				for (litehtml::position::vector::iterator box = redraw_boxes.begin(); box != redraw_boxes.end(); box++) {
-					RECT rcRedraw;
+					RECTX rcRedraw;
 					rcRedraw.left = box->left();
 					rcRedraw.right = box->right();
 					rcRedraw.top = box->top();
 					rcRedraw.bottom = box->bottom();
-					//InvalidateRect(m_hWnd, &rcRedraw, TRUE);
+					InvalidateRectX(m_hWnd, &rcRedraw, TRUE);
 				}
-				//UpdateWindow(m_hWnd);
+				UpdateWindowX(m_hWnd);
 			}
 		}
 	}
@@ -207,14 +325,14 @@ void toolbar_wnd::OnLButtonUp(int x, int y) {
 			litehtml::position::vector redraw_boxes;
 			if (m_doc->on_lbutton_up(x, y, x, y, redraw_boxes)) {
 				for (litehtml::position::vector::iterator box = redraw_boxes.begin(); box != redraw_boxes.end(); box++) {
-					RECT rcRedraw;
+					RECTX rcRedraw;
 					rcRedraw.left = box->left();
 					rcRedraw.right = box->right();
 					rcRedraw.top = box->top();
 					rcRedraw.bottom = box->bottom();
-					//InvalidateRect(m_hWnd, &rcRedraw, TRUE);
+					InvalidateRectX(m_hWnd, &rcRedraw, TRUE);
 				}
-				//UpdateWindow(m_hWnd);
+				UpdateWindowX(m_hWnd);
 			}
 		}
 	}
@@ -328,7 +446,7 @@ void toolbar_wnd::import_css(litehtml::string& text, const litehtml::string& url
 
 void toolbar_wnd::get_client_rect(litehtml::position& client) const {
 	RECTX rcClient;
-	GetClientRect(m_pose, m_bounds, &rcClient);
+	GetClientRectX(m_hWnd, &rcClient);
 	client.x = rcClient.left;
 	client.y = rcClient.top;
 	client.width = rcClient.right - rcClient.left;

@@ -10,7 +10,7 @@
 class CSingleLineEditCtrl : public TxThread {
 private:
 	cairo_container* m_container;
-	int					m_parent;
+	XWND				m_parent;
 	std::wstring		m_text;
 	cairo_font* m_hFont;
 	litehtml::web_color	m_textColor;
@@ -29,7 +29,7 @@ private:
 	RECT				m_rcText;
 
 public:
-	CSingleLineEditCtrl(int parent, cairo_container* container);
+	CSingleLineEditCtrl(XWND parent, cairo_container* container);
 	virtual ~CSingleLineEditCtrl(void);
 
 	BOOL	OnKeyDown(WPARAM wParam, LPARAM lParam);
@@ -48,7 +48,7 @@ public:
 	void	replaceSel(LPCWSTR text);
 	void	hideCaret();
 	void	showCaret();
-	void	set_parent(int parent);
+	void	set_parent(XWND parent);
 	BOOL	in_capture() {
 		return m_inCapture;
 	}

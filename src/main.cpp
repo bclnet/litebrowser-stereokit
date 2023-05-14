@@ -10,8 +10,10 @@ browser_wnd browser(0);
 
 CRITICAL_SECTION cairo_font::m_sync;
 
-int main(void) {
+int main(int argc, char* argv[]) {
 #if _WIN32
+	CoInitialize(NULL);
+	InitCommonControls();
 	InitializeCriticalSectionAndSpinCount(&cairo_font::m_sync, 1000);
 	GdiplusStartupInput gdiplusStartupInput;
 	ULONG_PTR gdiplusToken;
@@ -29,6 +31,13 @@ int main(void) {
 	cube_mat = material_find(default_id_material_ui);
 
 	browser.create();
+	if (argc > 1) {
+		browser.open((LPCWSTR)argv[0]);
+	}
+	else {
+		browser.open(L"http://www.dmoz.org/");
+	}
+
 	sk_run([]() {
 		//ui_handle_begin("Cube", cube_pose, mesh_get_bounds(cube_mesh), false);
 		//render_add_mesh(cube_mesh, cube_mat, matrix_identity);

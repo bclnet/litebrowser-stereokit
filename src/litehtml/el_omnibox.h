@@ -5,10 +5,10 @@
 
 class el_omnibox : public litehtml::html_tag {
 	CSingleLineEditCtrl m_edit;
-	int m_hWndParent;
+	XWND m_hWndParent;
 	BOOL m_haveFocus;
 public:
-	el_omnibox(const std::shared_ptr<litehtml::document>& doc, int parent, cairo_container* container);
+	el_omnibox(const std::shared_ptr<litehtml::document>& doc, XWND parent, cairo_container* container);
 	~el_omnibox();
 
 	void draw(litehtml::uint_ptr hdc, int x, int y, const litehtml::position* clip, const std::shared_ptr<litehtml::render_item>& ri) override;
@@ -21,7 +21,7 @@ public:
 	void update_position();
 	void set_url(LPCWSTR url);
 	std::wstring get_url();
-	void set_parent(int parent);
+	void set_parent(XWND parent);
 	void SetFocus();
 	void KillFocus();
 	void select_all() {

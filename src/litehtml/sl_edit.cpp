@@ -2,7 +2,7 @@
 #include "sl_edit.h"
 #include "ctrl_container.h"
 
-CSingleLineEditCtrl::CSingleLineEditCtrl(int parent, cairo_container* container) : m_textColor(0, 0, 0) {
+CSingleLineEditCtrl::CSingleLineEditCtrl(XWND parent, cairo_container* container) : m_textColor(0, 0, 0) {
 	m_parent = parent;
 	m_container = container;
 	m_leftPos = 0;
@@ -34,89 +34,89 @@ BOOL CSingleLineEditCtrl::OnKeyDown(WPARAM wParam, LPARAM lParam) {
 		}
 	case 'C': //C
 		if (GetKeyState(VK_CONTROL) & 0x8000) {
-			//if (OpenClipboard(m_parent)) {
-			//	EmptyClipboard();
-			//	std::wstring strCopy;
-			//	if (m_selStart >= 0) {
-			//		int start = min(m_selStart, m_selEnd);
-			//		int end = max(m_selStart, m_selEnd);
-			//		strCopy = m_text.substr(start, end - start);
-			//	}
-			//	else {
-			//		strCopy = m_text;
-			//	}
-			//	HGLOBAL hText = GlobalAlloc(GHND, (strCopy.length() + 1) * sizeof(TCHAR));
-			//	LPWSTR text = (LPWSTR)GlobalLock((HGLOBAL)hText);
-			//	lstrcpy(text, strCopy.c_str());
-			//	GlobalUnlock(hText);
-			//	SetClipboardData(CF_UNICODETEXT, hText);
-			//	CloseClipboard();
-			//}
+			if (OpenClipboardX(m_parent)) {
+				EmptyClipboard();
+				std::wstring strCopy;
+				if (m_selStart >= 0) {
+					int start = min(m_selStart, m_selEnd);
+					int end = max(m_selStart, m_selEnd);
+					strCopy = m_text.substr(start, end - start);
+				}
+				else {
+					strCopy = m_text;
+				}
+				HGLOBAL hText = GlobalAlloc(GHND, (strCopy.length() + 1) * sizeof(TCHAR));
+				LPWSTR text = (LPWSTR)GlobalLock((HGLOBAL)hText);
+				lstrcpy(text, strCopy.c_str());
+				GlobalUnlock(hText);
+				SetClipboardData(CF_UNICODETEXT, hText);
+				CloseClipboard();
+			}
 			return 0;
 		}
 		break;
 	case 0x58: //X
 		if (GetKeyState(VK_CONTROL) & 0x8000) {
-			//if (OpenClipboard(m_parent)) {
-			//	EmptyClipboard();
-			//	std::wstring strCopy;
-			//	if (m_selStart >= 0) {
-			//		int start = min(m_selStart, m_selEnd);
-			//		int end = max(m_selStart, m_selEnd);
-			//		strCopy = m_text.substr(start, end - start);
-			//		delSelection();
-			//	}
-			//	else {
-			//		strCopy = m_text;
-			//		setText(L"");
-			//	}
-			//	HGLOBAL hText = GlobalAlloc(GHND, (strCopy.length() + 1) * sizeof(TCHAR));
-			//	LPWSTR text = (LPWSTR)GlobalLock((HGLOBAL)hText);
-			//	lstrcpy(text, strCopy.c_str());
-			//	GlobalUnlock(hText);
-			//	SetClipboardData(CF_UNICODETEXT, hText);
-			//	CloseClipboard();
-			//}
+			if (OpenClipboardX(m_parent)) {
+				EmptyClipboard();
+				std::wstring strCopy;
+				if (m_selStart >= 0) {
+					int start = min(m_selStart, m_selEnd);
+					int end = max(m_selStart, m_selEnd);
+					strCopy = m_text.substr(start, end - start);
+					delSelection();
+				}
+				else {
+					strCopy = m_text;
+					setText(L"");
+				}
+				HGLOBAL hText = GlobalAlloc(GHND, (strCopy.length() + 1) * sizeof(TCHAR));
+				LPWSTR text = (LPWSTR)GlobalLock((HGLOBAL)hText);
+				lstrcpy(text, strCopy.c_str());
+				GlobalUnlock(hText);
+				SetClipboardData(CF_UNICODETEXT, hText);
+				CloseClipboard();
+			}
 			return 0;
 		}
 		break;
 	case 0x56: //V
 		if (GetKeyState(VK_CONTROL) & 0x8000) {
-			//if (OpenClipboard(m_parent)) {
-			//	HANDLE hText = GetClipboardData(CF_UNICODETEXT);
-			//	if (hText) {
-			//		LPWSTR text = (LPWSTR)GlobalLock((HGLOBAL)hText);
-			//		replaceSel(text);
-			//		m_caretPos += lstrlen(text);
-			//		GlobalUnlock(hText);
-			//		UpdateCarret();
-			//	}
-			//	CloseClipboard();
-			//}
+			if (OpenClipboardX(m_parent)) {
+				HANDLE hText = GetClipboardData(CF_UNICODETEXT);
+				if (hText) {
+					LPWSTR text = (LPWSTR)GlobalLock((HGLOBAL)hText);
+					replaceSel(text);
+					m_caretPos += lstrlen(text);
+					GlobalUnlock(hText);
+					UpdateCarret();
+				}
+				CloseClipboard();
+			}
 			return 0;
 		}
 		break;
 	case 0x2D: //Insert
 		if (GetKeyState(VK_SHIFT) & 0x8000) {
-			//if (OpenClipboard(m_parent)) {
-			//	HANDLE hText = GetClipboardData(CF_UNICODETEXT);
-			//	if (hText) {
-			//		LPWSTR text = (LPWSTR)GlobalLock((HGLOBAL)hText);
-			//		replaceSel(text);
-			//		m_caretPos += lstrlen(text);
-			//		GlobalUnlock(hText);
-			//		UpdateCarret();
-			//	}
-			//	CloseClipboard();
-			//}
+			if (OpenClipboardX(m_parent)) {
+				HANDLE hText = GetClipboardData(CF_UNICODETEXT);
+				if (hText) {
+					LPWSTR text = (LPWSTR)GlobalLock((HGLOBAL)hText);
+					replaceSel(text);
+					m_caretPos += lstrlen(text);
+					GlobalUnlock(hText);
+					UpdateCarret();
+				}
+				CloseClipboard();
+			}
 			return 0;
 		}
 		break;
 	case VK_RETURN:
-		//PostMessage(m_parent, WM_EDIT_ACTIONKEY, VK_RETURN, 0);
+		PostMessageX(m_parent, WM_EDIT_ACTIONKEY, VK_RETURN, 0);
 		return 0;
 	case VK_ESCAPE:
-		//PostMessage(m_parent, WM_EDIT_ACTIONKEY, VK_ESCAPE, 0);
+		PostMessageX(m_parent, WM_EDIT_ACTIONKEY, VK_ESCAPE, 0);
 		return 0;
 	case VK_BACK:
 		Stop();
@@ -378,7 +378,7 @@ void CSingleLineEditCtrl::UpdateCarret() {
 
 void CSingleLineEditCtrl::UpdateControl() {
 	if (m_parent) {
-		//SendMessage(m_parent, WM_UPDATE_CONTROL, 0, 0);
+		SendMessageX(m_parent, WM_UPDATE_CONTROL, 0, 0);
 	}
 }
 
@@ -559,14 +559,14 @@ BOOL CSingleLineEditCtrl::OnKeyUp(WPARAM wParam, LPARAM lParam) {
 void CSingleLineEditCtrl::OnLButtonDown(int x, int y) {
 	m_caretPos = getCaretPosXY(x - m_rcText.left, y - m_rcText.top);
 	setSelection(-1, m_caretPos);
-	//SendMessage(m_parent, WM_EDIT_CAPTURE, TRUE, 0);
+	SendMessageX(m_parent, WM_EDIT_CAPTURE, TRUE, 0);
 	m_inCapture = TRUE;
 	m_startCapture = m_caretPos;
 }
 
 void CSingleLineEditCtrl::OnLButtonUp(int x, int y) {
 	if (m_inCapture) {
-		//SendMessage(m_parent, WM_EDIT_CAPTURE, FALSE, 0);
+		SendMessageX(m_parent, WM_EDIT_CAPTURE, FALSE, 0);
 		m_inCapture = FALSE;
 	}
 }
@@ -610,6 +610,6 @@ void CSingleLineEditCtrl::showCaret() {
 	UpdateControl();
 }
 
-void CSingleLineEditCtrl::set_parent(int parent) {
+void CSingleLineEditCtrl::set_parent(XWND parent) {
 	m_parent = parent;
 }

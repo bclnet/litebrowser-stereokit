@@ -5,22 +5,20 @@
 #include "litehtml/el_omnibox.h"
 class browser_wnd;
 
-class toolbar_wnd : public cairo_container {
-	pose_t m_pose = { };
-	bounds_t m_bounds = { };
-	int m_hWnd;
-	int m_hInst;
+class toolbar_wnd : public WND, public cairo_container {
+	XWND					m_hWnd;
+	XINSTANCE				m_hInst;
 	litehtml::document::ptr	m_doc;
-	browser_wnd* m_parent;
+	browser_wnd*			m_parent;
 	std::shared_ptr<el_omnibox>	m_omnibox;
 	litehtml::string		m_cursor;
 	BOOL					m_inCapture;
 public:
-	toolbar_wnd(int hInst, browser_wnd* parent);
+	toolbar_wnd(XINSTANCE hInst, browser_wnd* parent);
 	virtual ~toolbar_wnd(void);
 
-	void create(int x, int y, int width, int parent);
-	int wnd() { return m_hWnd; }
+	void create(int x, int y, int z, int width, XWND parent);
+	XWND wnd() { return m_hWnd; }
 	int height() {
 		return m_doc ? m_doc->height() : 0;
 	}
@@ -54,7 +52,7 @@ protected:
 	virtual void	get_client_rect(litehtml::position& client) const;
 
 private:
-	static LRESULT CALLBACK WndProc(int hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam);
+	static LRESULT CALLBACK WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam);
 	void render_toolbar(int width);
 	void update_cursor();
 };

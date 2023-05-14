@@ -3,7 +3,7 @@
 #include <Richedit.h>
 #include <strsafe.h>
 
-el_omnibox::el_omnibox(const std::shared_ptr<litehtml::document>& doc, int parent, cairo_container* container) : litehtml::html_tag(doc), m_edit(parent, container) {
+el_omnibox::el_omnibox(const std::shared_ptr<litehtml::document>& doc, XWND parent, cairo_container* container) : litehtml::html_tag(doc), m_edit(parent, container) {
 	m_hWndParent = parent;
 	m_haveFocus = FALSE;
 }
@@ -37,14 +37,14 @@ void el_omnibox::compute_styles(bool recursive) {
 	m_edit.setFont((cairo_font*)css().get_font(), css().get_color());
 }
 
-void el_omnibox::set_parent(int parent) {
+void el_omnibox::set_parent(XWND parent) {
 	m_hWndParent = parent;
 	m_edit.set_parent(parent);
 }
 
 void el_omnibox::on_click() {
 	if (!m_haveFocus) {
-		//SendMessage(m_hWndParent, WM_OMNIBOX_CLICKED, 0, 0);
+		SendMessageX(m_hWndParent, WM_OMNIBOX_CLICKED, 0, 0);
 	}
 }
 

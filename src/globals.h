@@ -52,5 +52,5 @@
 
 #include <stereokit.h>
 #include <stereokit_ui.h>
-#include "utils.h"
+#include "message.h"
 using namespace sk;

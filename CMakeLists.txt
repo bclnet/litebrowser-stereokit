@@ -77,7 +77,7 @@ set(SOURCE
     src/toolbar_wnd.cpp
     src/web_history.cpp
     src/web_page.cpp
-    src/utils.cpp
+    src/message.cpp
 )
 set(HEADERS
     #${CONTAINERS}/stereokit/container_stereokit.h
@@ -91,7 +91,7 @@ set(HEADERS
     src/toolbar_wnd.h
     src/web_history.h
     src/web_page.h
-    src/utils.h
+    src/message.h
 )
 if (UNIX)
     set(SOURCE ${SOURCE}

@@ -21,8 +21,99 @@ htmlview_wnd::~htmlview_wnd(void) {
 	DeleteCriticalSection(&m_sync);
 }
 
-LRESULT CALLBACK htmlview_wnd::WndProc(int hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
-	return 0;
+LRESULT CALLBACK htmlview_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
+	htmlview_wnd* pThis = (htmlview_wnd*)&hWnd;
+	if (pThis || uMessage == WM_CREATE) {
+		switch (uMessage) {
+		case WM_PAGE_LOADED:
+			pThis->OnPageReady();
+			return 0;
+		case WM_IMAGE_LOADED:
+			if (wParam) {
+				pThis->redraw(NULL, FALSE);
+			}
+			else {
+				pThis->render();
+			}
+			break;
+		case WM_SETCURSOR:
+			pThis->update_cursor();
+			break;
+		case WM_ERASEBKGND:
+			return TRUE;
+		case WM_CREATE: {
+			LPCREATESTRUCT lpcs = (LPCREATESTRUCT)lParam;
+			pThis = (htmlview_wnd*)(lpcs->lpCreateParams);
+			SetPropX(hWnd, TEXT("htmlview_this"), (HANDLE)pThis);
+			pThis->m_hWnd = hWnd;
+			pThis->OnCreate();
+			break;
+		}
+		case WM_PAINT: {
+			RECTX rcClient;
+			GetClientRectX(hWnd, &rcClient);
+			pThis->create_dib(rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
+
+			//PAINTSTRUCT ps;
+			//HDC hdc = BeginPaint(hWnd, &ps);
+
+			//pThis->OnPaint(&pThis->m_dib, &ps.rcPaint);
+
+			//BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
+			//	ps.rcPaint.right - ps.rcPaint.left,
+			//	ps.rcPaint.bottom - ps.rcPaint.top, pThis->m_dib, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+
+			//EndPaint(hWnd, &ps);
+			return 0;
+		}
+		case WM_SIZE:
+			pThis->OnSize(LOWORD(lParam), HIWORD(lParam));
+			return 0;
+		case WM_DESTROY:
+			RemovePropX(hWnd, TEXT("htmlview_this"));
+			pThis->OnDestroy();
+			delete pThis;
+			return 0;
+		case WM_VSCROLL:
+			pThis->OnVScroll(HIWORD(wParam), LOWORD(wParam));
+			return 0;
+		case WM_HSCROLL:
+			pThis->OnHScroll(HIWORD(wParam), LOWORD(wParam));
+			return 0;
+		case WM_MOUSEWHEEL:
+			pThis->OnMouseWheel(GET_WHEEL_DELTA_WPARAM(wParam));
+			return 0;
+		case WM_KEYDOWN:
+			pThis->OnKeyDown((UINT)wParam);
+			return 0;
+		case WM_MOUSEMOVE: {
+			//TRACKMOUSEEVENT tme;
+			//ZeroMemory(&tme, sizeof(TRACKMOUSEEVENT));
+			//tme.cbSize = sizeof(TRACKMOUSEEVENT);
+			//tme.dwFlags = TME_QUERY;
+			//tme.hwndTrack = hWnd;
+			//TrackMouseEvent(&tme);
+			//if (!(tme.dwFlags & TME_LEAVE)) {
+			//	tme.dwFlags = TME_LEAVE;
+			//	tme.hwndTrack = hWnd;
+			//	TrackMouseEvent(&tme);
+			//}
+			pThis->OnMouseMove(GET_X_LPARAMX(lParam), GET_Y_LPARAMX(lParam));
+			return 0;
+		}
+		case WM_MOUSELEAVE:
+			pThis->OnMouseLeave();
+			return 0;
+		case WM_LBUTTONDOWN:
+			pThis->OnLButtonDown(GET_X_LPARAMX(lParam), GET_Y_LPARAMX(lParam));
+			return 0;
+		case WM_LBUTTONUP:
+			pThis->OnLButtonUp(GET_X_LPARAMX(lParam), GET_Y_LPARAMX(lParam));
+			return 0;
+		}
+	}
+
+	return DefWindowProcX(hWnd, uMessage, wParam, lParam);
 }
 
 void htmlview_wnd::OnCreate() {
@@ -72,8 +163,8 @@ void htmlview_wnd::OnSize(int width, int height) {
 void htmlview_wnd::OnDestroy() {
 }
 
-void htmlview_wnd::create(int x, int y, int width, int height, int parent) {
-	m_hWnd = 1; // CreateWindow(HTMLVIEWWND_CLASS, L"htmlview", WS_CHILD | WS_VISIBLE, x, y, width, height, parent, NULL, m_hInst, (LPVOID)this);
+void htmlview_wnd::create(int x, int y, int z, int width, int height, int depth, XWND parent) {
+	m_hWnd = CreateWindowX(L"htmlview", x, y, z, width, height, depth, parent, NULL, m_hInst, (LPVOID)this, (WNDPROC)htmlview_wnd::WndProc);
 }
 
 void htmlview_wnd::open(LPCWSTR url, bool reload) {
@@ -122,14 +213,14 @@ void htmlview_wnd::calc_draw(int calc_repeat) {
 	DWORD tic1 = GetTickCount();
 	for (int i = 0; i < calc_repeat; i++) {
 		RECTX rcClient;
-		GetClientRect(m_pose, m_bounds, &rcClient);
+		GetClientRectX(m_hWnd, &rcClient);
 		//rcClient.bottom = rcClient.top + (rcClient.bottom - rcClient.top) / 10;
 		redraw(&rcClient, TRUE);
 	}
 	DWORD tic2 = GetTickCount();
 	WCHAR msg[255];
 	StringCchPrintf(msg, 255, L"Draw time: %d msec", tic2 - tic1);
-	//MessageBox(m_hWnd, msg, L"litebrowser", MB_ICONINFORMATION | MB_OK);
+	MessageBoxX(m_hWnd, msg, L"litebrowser", MB_ICONINFORMATION | MB_OK);
 }
 
 void htmlview_wnd::render(BOOL calc_time, BOOL do_redraw, int calc_repeat) {
@@ -141,7 +232,7 @@ void htmlview_wnd::render(BOOL calc_time, BOOL do_redraw, int calc_repeat) {
 
 	if (page) {
 		RECTX rcClient;
-		GetClientRect(m_pose, m_bounds, &rcClient);
+		GetClientRectX(m_hWnd, &rcClient);
 
 		int width = rcClient.right - rcClient.left;
 		int height = rcClient.bottom - rcClient.top;
@@ -155,7 +246,7 @@ void htmlview_wnd::render(BOOL calc_time, BOOL do_redraw, int calc_repeat) {
 			DWORD tic2 = GetTickCount();
 			WCHAR msg[255];
 			StringCchPrintf(msg, 255, L"Render time: %d msec", tic2 - tic1);
-			//MessageBox(m_hWnd, msg, L"litebrowser", MB_ICONINFORMATION | MB_OK);
+			MessageBoxX(m_hWnd, msg, L"litebrowser", MB_ICONINFORMATION | MB_OK);
 		}
 		else {
 			page->m_doc->render(width);
@@ -178,24 +269,24 @@ void htmlview_wnd::render(BOOL calc_time, BOOL do_redraw, int calc_repeat) {
 
 void htmlview_wnd::redraw(LPRECTX rcDraw, BOOL update) {
 	if (m_hWnd) {
-		//InvalidateRect(m_hWnd, rcDraw, TRUE);
+		InvalidateRectX(m_hWnd, rcDraw, TRUE);
 		if (update) {
-			//UpdateWindow(m_hWnd);
+			UpdateWindowX(m_hWnd);
 		}
 	}
 }
 
 void htmlview_wnd::update_scroll() {
 	if (!is_valid_page()) {
-		//ShowScrollBar(m_hWnd, SB_BOTH, FALSE);
+		ShowScrollBarX(m_hWnd, SB_BOTH, FALSE);
 		return;
 	}
 
 	if (m_max_top > 0) {
-		//ShowScrollBar(m_hWnd, SB_VERT, TRUE);
+		ShowScrollBarX(m_hWnd, SB_VERT, TRUE);
 
 		RECTX rcClient;
-		GetClientRect(m_pose, m_bounds, &rcClient);
+		GetClientRectX(m_hWnd, &rcClient);
 
 		SCROLLINFO si;
 		si.cbSize = sizeof(SCROLLINFO);
@@ -204,17 +295,17 @@ void htmlview_wnd::update_scroll() {
 		si.nMax = m_max_top + (rcClient.bottom - rcClient.top);
 		si.nPos = m_top;
 		si.nPage = rcClient.bottom - rcClient.top;
-		//SetScrollInfo(m_hWnd, SB_VERT, &si, TRUE);
+		SetScrollInfoX(m_hWnd, SB_VERT, &si, TRUE);
 	}
 	else {
-		//ShowScrollBar(m_hWnd, SB_VERT, FALSE);
+		ShowScrollBarX(m_hWnd, SB_VERT, FALSE);
 	}
 
 	if (m_max_left > 0) {
-		//ShowScrollBar(m_hWnd, SB_HORZ, TRUE);
+		ShowScrollBarX(m_hWnd, SB_HORZ, TRUE);
 
 		RECTX rcClient;
-		GetClientRect(m_pose, m_bounds, &rcClient);
+		GetClientRectX(m_hWnd, &rcClient);
 
 		SCROLLINFO si;
 		si.cbSize = sizeof(SCROLLINFO);
@@ -223,16 +314,16 @@ void htmlview_wnd::update_scroll() {
 		si.nMax = m_max_left + (rcClient.right - rcClient.left);
 		si.nPos = m_left;
 		si.nPage = rcClient.right - rcClient.left;
-		//SetScrollInfo(m_hWnd, SB_HORZ, &si, TRUE);
+		SetScrollInfoX(m_hWnd, SB_HORZ, &si, TRUE);
 	}
 	else {
-		//ShowScrollBar(m_hWnd, SB_HORZ, FALSE);
+		ShowScrollBarX(m_hWnd, SB_HORZ, FALSE);
 	}
 }
 
 void htmlview_wnd::OnVScroll(int pos, int flags) {
 	RECTX rcClient;
-	GetClientRect(m_pose, m_bounds, &rcClient);
+	GetClientRectX(m_hWnd, &rcClient);
 
 	int lineHeight = 16;
 	int pageHeight = rcClient.bottom - rcClient.top - lineHeight;
@@ -281,7 +372,7 @@ void htmlview_wnd::OnVScroll(int pos, int flags) {
 
 void htmlview_wnd::OnHScroll(int pos, int flags) {
 	RECTX rcClient;
-	GetClientRect(m_pose, m_bounds, &rcClient);
+	GetClientRectX(m_hWnd, &rcClient);
 
 	int lineWidth = 16;
 	int pageWidth = rcClient.right - rcClient.left - lineWidth;
@@ -373,10 +464,10 @@ void htmlview_wnd::set_caption() {
 	web_page* page = get_page();
 
 	if (!page) {
-		//SetWindowText(GetParent(m_hWnd), L"litebrowser");
+		SetWindowTextX(GetParentX(m_hWnd), L"litebrowser");
 	}
 	else {
-		//SetWindowText(GetParent(m_hWnd), page->m_caption.c_str());
+		SetWindowTextX(GetParentX(m_hWnd), page->m_caption.c_str());
 		page->release();
 	}
 }
@@ -396,7 +487,7 @@ void htmlview_wnd::OnMouseMove(int x, int y) {
 				rcRedraw.bottom = box->bottom();
 				redraw(&rcRedraw, FALSE);
 			}
-			//UpdateWindow(m_hWnd);
+			UpdateWindowX(m_hWnd);
 			update_cursor();
 		}
 		page->release();
@@ -419,7 +510,7 @@ void htmlview_wnd::OnMouseLeave() {
 				rcRedraw.bottom = box->bottom();
 				redraw(&rcRedraw, FALSE);
 			}
-			//UpdateWindow(m_hWnd);
+			UpdateWindowX(m_hWnd);
 		}
 
 		page->release();
@@ -442,7 +533,7 @@ void htmlview_wnd::OnLButtonDown(int x, int y) {
 				rcRedraw.bottom = box->bottom();
 				redraw(&rcRedraw, FALSE);
 			}
-			//UpdateWindow(m_hWnd);
+			UpdateWindowX(m_hWnd);
 		}
 
 		page->release();
@@ -465,7 +556,7 @@ void htmlview_wnd::OnLButtonUp(int x, int y) {
 				rcRedraw.bottom = box->bottom();
 				redraw(&rcRedraw, FALSE);
 			}
-			//UpdateWindow(m_hWnd);
+			UpdateWindowX(m_hWnd);
 		}
 
 		page->release();
@@ -508,7 +599,7 @@ void htmlview_wnd::update_cursor() {
 
 void htmlview_wnd::get_client_rect(litehtml::position& client) const {
 	RECTX rcClient;
-	GetClientRect(m_pose, m_bounds, &rcClient);
+	GetClientRectX(m_hWnd, &rcClient);
 	client.x = rcClient.left;
 	client.y = rcClient.top;
 	client.width = rcClient.right - rcClient.left;
@@ -722,13 +813,13 @@ void htmlview_wnd::scroll_to(int new_left, int new_top) {
 		}
 
 		m_top = new_top;
-		//SetScrollPos(m_hWnd, SB_VERT, m_top, TRUE);
+		SetScrollPosX(m_hWnd, SB_VERT, m_top, TRUE);
 	}
 
 
 	if (new_left != m_left) {
 		m_left = new_left;
-		//SetScrollPos(m_hWnd, SB_HORZ, m_left, TRUE);
+		SetScrollPosX(m_hWnd, SB_HORZ, m_left, TRUE);
 		need_redraw = true;
 	}
 

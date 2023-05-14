@@ -3,7 +3,7 @@
 #include "htmlview_wnd.h"
 #include "toolbar_wnd.h"
 
-browser_wnd::browser_wnd(int hInst) {
+browser_wnd::browser_wnd(XINSTANCE hInst) {
 	m_hInst = hInst;
 	m_hWnd = NULL;
 	m_view = new htmlview_wnd(hInst, this);
@@ -19,31 +19,65 @@ browser_wnd::~browser_wnd(void) {
 #endif
 }
 
+LRESULT CALLBACK browser_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
+	browser_wnd* pThis = (browser_wnd*)&hWnd;
+	if (pThis || uMessage == WM_CREATE) {
+		switch (uMessage) {
+		case WM_ERASEBKGND: return TRUE;
+		case WM_CREATE: {
+			LPCREATESTRUCT lpcs = (LPCREATESTRUCT)lParam;
+			pThis = (browser_wnd*)lpcs->lpCreateParams;
+			SetPropX(hWnd, TEXT("browser_this"), (HANDLE)pThis);
+			pThis->m_hWnd = hWnd;
+			//pThis->OnCreate();
+			break;
+		}
+		case WM_SIZE:
+			pThis->OnSize(LOWORD(lParam), HIWORD(lParam));
+			return 0;
+		case WM_DESTROY:
+			RemovePropX(hWnd, TEXT("browser_this"));
+			pThis->OnDestroy();
+			delete pThis;
+			return 0;
+		case WM_CLOSE:
+			PostQuitMessage(0);
+			return 0;
+		case WM_ACTIVATE:
+			if (LOWORD(wParam) != WA_INACTIVE) {
+				SetFocusX(pThis->m_view->wnd());
+			}
+			return 0;
+		}
+	}
+	return DefWindowProcX(hWnd, uMessage, wParam, lParam);
+}
+
 void browser_wnd::OnCreate() {
 	RECTX rcClient;
-	GetClientRect(m_pose, m_bounds, &rcClient);
+	GetClientRectX(m_hWnd, &rcClient);
 #ifndef NO_TOOLBAR
-	m_toolbar->create(rcClient.left, rcClient.top, rcClient.right - rcClient.left, m_hWnd);
-	m_view->create(rcClient.left, rcClient.top + m_toolbar->height(), rcClient.right - rcClient.left, rcClient.bottom - rcClient.top - m_toolbar->height(), m_hWnd);
+	m_toolbar->create(rcClient.left, rcClient.top, CW_USEDEFAULT, rcClient.right - rcClient.left, m_hWnd);
+	m_view->create(rcClient.left, rcClient.top + m_toolbar->height(), CW_USEDEFAULT, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top - m_toolbar->height(), CW_USEDEFAULT, m_hWnd);
 #else
-	m_view->create(rcClient.left, rcClient.top, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, m_hWnd);
+	m_view->create(rcClient.left, rcClient.top, CW_USEDEFAULT, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, CW_USEDEFAULT, m_hWnd);
 #endif
-	//SetFocus(m_view->wnd());
+	SetFocusX(m_view->wnd());
 }
 
 void browser_wnd::OnSize(int width, int height) {
 	RECTX rcClient;
-	GetClientRect(m_pose, m_bounds, &rcClient);
+	GetClientRectX(m_hWnd, &rcClient);
 #ifndef NO_TOOLBAR
 	int toolbar_height = m_toolbar->set_width(rcClient.right - rcClient.left);
 #else
 	int toolbar_height = 0;
 #endif
-	//SetWindowPos(m_view->wnd(), NULL, rcClient.left, rcClient.top + toolbar_height, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top - toolbar_height, SWP_NOZORDER);
-	//UpdateWindow(m_view->wnd());
+	SetWindowPosX(m_view->wnd(), NULL, rcClient.left, rcClient.top + toolbar_height, rcClient.right - rcClient.left, 0, rcClient.bottom - rcClient.top - toolbar_height, 0, SWP_NOZORDER);
+	UpdateWindowX(m_view->wnd());
 #ifndef NO_TOOLBAR
-	//SetWindowPos(m_toolbar->wnd(), NULL, rcClient.left, rcClient.top, rcClient.right - rcClient.left, toolbar_height, SWP_NOZORDER);
-	//UpdateWindow(m_toolbar->wnd());
+	SetWindowPosX(m_toolbar->wnd(), NULL, rcClient.left, rcClient.top, 0, rcClient.right - rcClient.left, toolbar_height, 0, SWP_NOZORDER);
+	UpdateWindowX(m_toolbar->wnd());
 #endif
 }
 
@@ -51,13 +85,13 @@ void browser_wnd::OnDestroy() {
 }
 
 void browser_wnd::create() {
-	m_hWnd = 0;
-	//ShowWindow(m_hWnd, SW_SHOW);
+	m_hWnd = CreateWindowX(L"Light HTML", CW_USEDEFAULT, 0, CW_USEDEFAULT, CW_USEDEFAULT, 0, CW_USEDEFAULT, NULL, NULL, m_hInst, (LPVOID)this, (WNDPROC)browser_wnd::WndProc);
+	ShowWindowX(m_hWnd, SW_SHOW);
 }
 
 void browser_wnd::update() {
-	ui_window_begin("Window", m_pose, {100, 100});
-	
+	ui_window_begin("Window", m_hWnd->pose, { 100, 100 });
+
 	ui_window_end();
 }
 
@@ -99,7 +133,7 @@ void browser_wnd::calc_redraw(int calc_repeat) {
 
 void browser_wnd::on_page_loaded(LPCWSTR url) {
 	if (m_view) {
-		//SetFocus(m_view->wnd());
+		SetFocusX(m_view->wnd());
 	}
 #ifndef NO_TOOLBAR
 	m_toolbar->on_page_loaded(url);
