@@ -13,9 +13,9 @@ class browser_wnd {
 public:
 	browser_wnd(XINSTANCE hInst);
 	virtual ~browser_wnd(void);
+	void update();
 
 	void create();
-	void update();
 	void open(LPCWSTR path);
 
 	void back();

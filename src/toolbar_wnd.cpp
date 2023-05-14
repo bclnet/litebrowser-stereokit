@@ -13,6 +13,14 @@ toolbar_wnd::toolbar_wnd(int hInst, browser_wnd* parent) {
 toolbar_wnd::~toolbar_wnd(void) {
 }
 
+void toolbar_wnd::update() {
+	EvaluteWndX(m_hWnd);
+	ui_panel_begin();
+	ui_label("toolbar");
+	m_graph.update();
+	ui_panel_end();
+}
+
 LRESULT CALLBACK toolbar_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
 	toolbar_wnd* pThis = NULL;
 	if (IsWindowX(hWnd)) {
@@ -66,16 +74,14 @@ LRESULT CALLBACK toolbar_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, L
 			break;
 		}
 		case WM_PAINT: {
-			//PAINTSTRUCT ps;
-			//HDC hdc = BeginPaint(hWnd, &ps);
-
-			//simpledib::dib dib;
-
-			//dib.beginPaint(hdc, &ps.rcPaint);
-			//pThis->OnPaint(&dib, &ps.rcPaint);
-			//dib.endPaint();
-
-			//EndPaint(hWnd, &ps);
+			PAINTSTRUCTX ps;
+			HDC hdc = BeginPaintX(hWnd, &ps);
+			simpledib::dib dib;
+			dib.beginPaint(hdc, (LPRECT)&ps.rcPaint);
+			pThis->OnPaint(&dib, &ps.rcPaint);
+			dib.endPaint();
+			EndPaintX(hWnd, &ps);
+			pThis->m_graph.insertSprite((unsigned char*)dib.bits(), dib.width(), dib.height());
 			return 0;
 		}
 		case WM_KILLFOCUS:
@@ -166,7 +172,7 @@ void toolbar_wnd::update_cursor() {
 void toolbar_wnd::OnCreate() {
 }
 
-void toolbar_wnd::OnPaint(simpledib::dib* dib, LPRECT rcDraw) {
+void toolbar_wnd::OnPaint(simpledib::dib* dib, LPRECTX rcDraw) {
 	if (m_doc) {
 		cairo_surface_t* surface = cairo_image_surface_create_for_data((unsigned char*)dib->bits(), CAIRO_FORMAT_ARGB32, dib->width(), dib->height(), dib->width() * 4);
 		cairo_t* cr = cairo_create(surface);
@@ -193,27 +199,28 @@ void toolbar_wnd::OnSize(int width, int height) {
 void toolbar_wnd::OnDestroy() {
 }
 
+extern std::map<std::wstring, std::tuple<const unsigned char*, const unsigned long>> ResourceMap;
 void toolbar_wnd::create(int x, int y, int z, int width, XWND parent) {
 	LPSTR html = NULL;
 
-	//HRSRC hResource = ::FindResource(m_hInst, L"toolbar.html", RT_HTML);
-	//if (hResource) {
-	//	DWORD imageSize = ::SizeofResource(m_hInst, hResource);
-	//	if (imageSize) {
-	//		LPCSTR pResourceData = (LPCSTR) ::LockResource(::LoadResource(m_hInst, hResource));
-	//		if (pResourceData) {
-	//			html = new CHAR[imageSize + 1];
-	//			lstrcpynA(html, pResourceData, imageSize);
-	//			html[imageSize] = 0;
-	//		}
-	//	}
-	//}
+	const auto hResource = ResourceMap[L"toolbar.html"];
+	if (std::get<0>(hResource)) {
+		DWORD imageSize = std::get<1>(hResource);
+		if (imageSize) {
+			LPCSTR pResourceData = (LPCSTR)std::get<0>(hResource);
+			if (pResourceData) {
+				html = new CHAR[imageSize + 1];
+				lstrcpynA(html, pResourceData, imageSize);
+				html[imageSize] = 0;
+			}
+		}
+	}
 	m_hWnd = CreateWindowX(L"toolbar", x, y, z, width, 1, 1, parent, NULL, m_hInst, (LPVOID)this, (WNDPROC)toolbar_wnd::WndProc);
 
 	m_doc = litehtml::document::createFromString(html, this, "html,div,body { display: block; } head,style { display: none; }");
 	delete html;
 	render_toolbar(width);
-	MoveWindowX(m_hWnd, x, y, width, m_doc->height(), TRUE);
+	MoveWindowX(m_hWnd, x, y, z, width, m_doc->height(), 1, TRUE);
 }
 
 void toolbar_wnd::make_url(LPCWSTR url, LPCWSTR basepath, std::wstring& out) {
@@ -222,9 +229,10 @@ void toolbar_wnd::make_url(LPCWSTR url, LPCWSTR basepath, std::wstring& out) {
 
 cairo_container::image_ptr toolbar_wnd::get_image(LPCWSTR url, bool redraw_on_ready) {
 	cairo_container::image_ptr img = cairo_container::image_ptr(new CTxDIB);
-	//if (!img->load(FindResource(m_hInst, url, RT_HTML), m_hInst)) {
-	//	img = nullptr;
-	//}
+	const auto hResource = ResourceMap[url];
+	if (!std::get<0>(hResource) || !img->load((LPBYTE)std::get<0>(hResource), std::get<1>(hResource))) {
+		img = nullptr;
+	}
 
 	return img;
 }
@@ -349,7 +357,7 @@ struct {
 	LPCWSTR	name;
 	LPCWSTR	url;
 } g_bookmarks[] = {
-	{L"DMOZ",					L"http://www.dmoz.org/"},
+	{L"DMOZ",					L"http://dmoz-odp.org/"},
 	{L"litehtml project",		L"https://github.com/litehtml/litehtml"},
 	{L"litehtml website",		L"http://www.litehtml.com/"},
 	{L"True Launch Bar",		L"http://www.truelaunchbar.com/"},
@@ -456,6 +464,8 @@ void toolbar_wnd::get_client_rect(litehtml::position& client) const {
 	GetClientRectX(m_hWnd, &rcClient);
 	client.x = rcClient.left;
 	client.y = rcClient.top;
+	//client.z = rcClient.front;
 	client.width = rcClient.right - rcClient.left;
 	client.height = rcClient.bottom - rcClient.top;
+	//client.back = rcClient.back - rcClient.front;
 }

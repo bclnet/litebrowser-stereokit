@@ -1,6 +1,7 @@
 #pragma once
 #include "web_page.h"
 #include "web_history.h"
+#include "object_graph.h"
 
 #define WM_IMAGE_LOADED		(WM_USER + 1000)
 #define WM_PAGE_LOADED		(WM_USER + 1001)
@@ -20,10 +21,12 @@ class htmlview_wnd {
 	web_page*					m_page_next;
 	CRITICAL_SECTION			m_sync;
 	simpledib::dib				m_dib;
-	browser_wnd* m_parent;
+	browser_wnd*				m_parent;
+	object_graph				m_graph;
 public:
 	htmlview_wnd(XINSTANCE hInst, browser_wnd* parent);
 	virtual ~htmlview_wnd(void);
+	void update();
 
 	void				create(int x, int y, int z, int width, int height, int depth, XWND parent);
 	void				open(LPCWSTR url, bool reload = FALSE);
@@ -46,7 +49,7 @@ public:
 
 protected:
 	virtual void		OnCreate();
-	virtual void		OnPaint(simpledib::dib* dib, LPRECT rcDraw);
+	virtual void		OnPaint(simpledib::dib* dib, LPRECTX rcDraw);
 	virtual void		OnSize(int width, int height);
 	virtual void		OnDestroy();
 	virtual void		OnVScroll(int pos, int flags);

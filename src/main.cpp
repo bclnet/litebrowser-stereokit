@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 		browser.open((LPCWSTR)argv[0]);
 	}
 	else {
-		browser.open(L"http://www.dmoz.org/");
+		browser.open(L"https://dmoz-odp.org/");
 	}
 
 	sk_run([]() {

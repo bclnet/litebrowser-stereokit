@@ -19,6 +19,18 @@ browser_wnd::~browser_wnd(void) {
 #endif
 }
 
+void browser_wnd::update() {
+	EvaluteWndX(m_hWnd);
+	ui_window_begin("browser", m_hWnd->pose, { 1, 1 });
+#ifndef NO_TOOLBAR
+	m_toolbar->update();
+	m_view->update();
+#else
+	m_view->update();
+#endif
+	ui_window_end();
+}
+
 LRESULT CALLBACK browser_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
 	browser_wnd* pThis = NULL;
 	if (IsWindowX(hWnd)) {
@@ -93,12 +105,6 @@ void browser_wnd::OnDestroy() {
 void browser_wnd::create() {
 	m_hWnd = CreateWindowX(L"Light HTML", CW_USEDEFAULT, 0, CW_USEDEFAULT, CW_USEDEFAULT, 0, CW_USEDEFAULT, NULL, NULL, m_hInst, (LPVOID)this, (WNDPROC)browser_wnd::WndProc);
 	ShowWindowX(m_hWnd, SW_SHOW);
-}
-
-void browser_wnd::update() {
-	ui_window_begin("Window", m_hWnd->pose, { 100, 100 });
-
-	ui_window_end();
 }
 
 void browser_wnd::open(LPCWSTR path) {

@@ -1,34 +1,13 @@
 cmake_minimum_required(VERSION 3.11)
 project(litebrowser VERSION "0.1.0" LANGUAGES CXX)
 include(FetchContent)
+include(CMakeFuncs.txt)
 if (UNIX)
     find_package(PkgConfig REQUIRED)
     set(SHLWAPI)
 else()
     find_library(SHLWAPI Shlwapi.lib) 
 endif()
-
-# function: target_link_resources (https://stackoverflow.com/questions/11813271/embed-resources-eg-shader-code-images-into-executable-library-with-cmake)
-if (NOT CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
-    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
-endif()
-set(RC_DEPENDS "")
-message(linker: ${CMAKE_LINKER})
-function(target_link_resources target path resources)
-    foreach(input IN LISTS resources)
-        file(RELATIVE_PATH relinput ${path} ${input})
-        string(MAKE_C_IDENTIFIER ${relinput} input_identifier)
-        set(output "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${input_identifier}.o")
-        target_link_libraries(${target} ${output})
-        message(${output})
-        add_custom_command(
-            OUTPUT ${output}
-            COMMAND ${CMAKE_LINKER} --relocatable --format binary --output ${output} ${input}
-            DEPENDS ${input}
-        )
-        set(RC_DEPENDS ${RC_DEPENDS} ${output} PARENT_SCOPE)
-    endforeach()
-endfunction()
 
 # build: release build
 #if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -72,6 +51,7 @@ add_subdirectory(litehtml)
 
 # set source and headers
 set(CONTAINERS litehtml/containers)
+create_resource_file(ResourceMap src/html/* src/html.cpp)
 set(SOURCE
     #${CONTAINERS}/stereokit/container_stereokit.cpp
     ${CONTAINERS}/cairo/cairo_container.cpp
@@ -79,12 +59,14 @@ set(SOURCE
     src/litehtml/el_omnibox.cpp
     src/litehtml/sl_edit.cpp
     src/main.cpp
+    src/message.cpp
+    src/object_graph.cpp
     src/browser_wnd.cpp
     src/htmlview_wnd.cpp
     src/toolbar_wnd.cpp
     src/web_history.cpp
     src/web_page.cpp
-    src/message.cpp
+    src/html.cpp
 )
 set(HEADERS
     #${CONTAINERS}/stereokit/container_stereokit.h
@@ -95,12 +77,12 @@ set(HEADERS
     src/globals.h
     src/browser_wnd.h
     src/htmlview_wnd.h
+    src/message.h
+    src/object_graph.h
     src/toolbar_wnd.h
     src/web_history.h
     src/web_page.h
-    src/message.h
 )
-file(GLOB RESOURCES src/html/*.*)
 if (UNIX)
     set(SOURCE ${SOURCE}
         src/linux/http_loader.cpp
@@ -127,7 +109,6 @@ include_directories(litebrowser
     ${StereoKitC_SOURCE_DIR}
     ${litehtml_SOURCE_DIR}/include
     ${LB_LIBS_INCLUDE_DIRS})
-target_link_resources(litebrowser ${CMAKE_CURRENT_SOURCE_DIR}/src "${RESOURCES}")
 target_link_options(litebrowser
     PRIVATE ${LB_LIBS_LDFLAGS})
 target_link_libraries(litebrowser
@@ -138,7 +119,7 @@ set_target_properties(litebrowser PROPERTIES
     CXX_STANDARD 11
     C_STANDARD 9
 )
-add_custom_target(rc ALL DEPENDS ${RC_DEPENDS})
+
 # msvc: add incremental builds
 if(MSVC)
     #target_compile_options(litebrowser PUBLIC "/ZI")

@@ -3,6 +3,7 @@
 #include "../containers/cairo/cairo_container.h"
 #include "dib.h"
 #include "litehtml/el_omnibox.h"
+#include "object_graph.h"
 class browser_wnd;
 
 class toolbar_wnd : public cairo_container {
@@ -13,9 +14,11 @@ class toolbar_wnd : public cairo_container {
 	std::shared_ptr<el_omnibox>	m_omnibox;
 	litehtml::string		m_cursor;
 	BOOL					m_inCapture;
+	object_graph			m_graph;
 public:
 	toolbar_wnd(XINSTANCE hInst, browser_wnd* parent);
 	virtual ~toolbar_wnd(void);
+	void update();
 
 	void create(int x, int y, int z, int width, XWND parent);
 	XWND wnd() { return m_hWnd; }
@@ -40,7 +43,7 @@ public:
 
 protected:
 	virtual void	OnCreate();
-	virtual void	OnPaint(simpledib::dib* dib, LPRECT rcDraw);
+	virtual void	OnPaint(simpledib::dib* dib, LPRECTX rcDraw);
 	virtual void	OnSize(int width, int height);
 	virtual void	OnDestroy();
 	virtual void	OnMouseMove(int x, int y);

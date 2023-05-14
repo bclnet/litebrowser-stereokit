@@ -21,6 +21,13 @@ htmlview_wnd::~htmlview_wnd(void) {
 	DeleteCriticalSection(&m_sync);
 }
 
+void htmlview_wnd::update() {
+	EvaluteWndX(m_hWnd);
+	ui_panel_begin();
+	m_graph.update();
+	ui_panel_end();
+}
+
 LRESULT CALLBACK htmlview_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
 	htmlview_wnd* pThis = NULL;
 	if (IsWindowX(hWnd)) {
@@ -61,16 +68,15 @@ LRESULT CALLBACK htmlview_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, 
 			GetClientRectX(hWnd, &rcClient);
 			pThis->create_dib(rcClient.right - rcClient.left, rcClient.bottom - rcClient.top);
 
-			//PAINTSTRUCT ps;
-			//HDC hdc = BeginPaint(hWnd, &ps);
-
-			//pThis->OnPaint(&pThis->m_dib, &ps.rcPaint);
-
-			//BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
-			//	ps.rcPaint.right - ps.rcPaint.left,
-			//	ps.rcPaint.bottom - ps.rcPaint.top, pThis->m_dib, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
-
-			//EndPaint(hWnd, &ps);
+			PAINTSTRUCTX ps;
+			HDC hdc = BeginPaintX(hWnd, &ps);
+			pThis->OnPaint(&pThis->m_dib, &ps.rcPaint);
+			BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
+				ps.rcPaint.right - ps.rcPaint.left,
+				ps.rcPaint.bottom - ps.rcPaint.top, pThis->m_dib, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
+			EndPaintX(hWnd, &ps);
+			simpledib::dib* dib = &pThis->m_dib;
+			pThis->m_graph.insertSprite((unsigned char*)dib->bits(), dib->width(), dib->height());
 			return 0;
 		}
 		case WM_SIZE:
@@ -126,7 +132,7 @@ LRESULT CALLBACK htmlview_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, 
 void htmlview_wnd::OnCreate() {
 }
 
-void htmlview_wnd::OnPaint(simpledib::dib* dib, LPRECT rcDraw) {
+void htmlview_wnd::OnPaint(simpledib::dib* dib, LPRECTX rcDraw) {
 	cairo_surface_t* surface = cairo_image_surface_create_for_data((unsigned char*)dib->bits(), CAIRO_FORMAT_ARGB32, dib->width(), dib->height(), dib->width() * 4);
 	cairo_t* cr = cairo_create(surface);
 
@@ -740,7 +746,7 @@ void htmlview_wnd::scroll_to(int new_left, int new_top) {
 	bool need_redraw = false;
 	if (new_top != m_top) {
 		if (std::abs(new_top - m_top) < client.height - client.height / 4) {
-			RECT rcRedraw;
+			RECTX rcRedraw;
 			if (new_top > m_top) {
 				int lines_count = new_top - m_top;
 				int rgba_to_scroll = m_dib.width() * lines_count;
@@ -779,8 +785,8 @@ void htmlview_wnd::scroll_to(int new_left, int new_top) {
 			unlock();
 
 			if (!fixed_boxes.empty()) {
-				RECT rcFixed;
-				RECT rcClient;
+				RECTX rcFixed;
+				RECTX rcClient;
 				rcClient.left = client.left();
 				rcClient.right = client.right();
 				rcClient.top = client.top();
@@ -791,7 +797,7 @@ void htmlview_wnd::scroll_to(int new_left, int new_top) {
 					rcRedraw.right = iter->right();
 					rcRedraw.top = iter->top();
 					rcRedraw.bottom = iter->bottom();
-					if (IntersectRect(&rcFixed, &rcRedraw, &rcClient)) {
+					if (IntersectRectX(&rcFixed, &rcRedraw, &rcClient)) {
 						OnPaint(&m_dib, &rcFixed);
 					}
 
@@ -799,8 +805,7 @@ void htmlview_wnd::scroll_to(int new_left, int new_top) {
 					rcRedraw.right = iter->right();
 					rcRedraw.top = iter->top() + (old_top - m_top);
 					rcRedraw.bottom = iter->bottom() + (old_top - m_top);
-
-					if (IntersectRect(&rcFixed, &rcRedraw, &rcClient)) {
+					if (IntersectRectX(&rcFixed, &rcRedraw, &rcClient)) {
 						OnPaint(&m_dib, &rcFixed);
 					}
 				}
