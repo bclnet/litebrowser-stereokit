@@ -8,7 +8,7 @@
 using namespace litehtml;
 class browser_wnd;
 
-class htmlview_wnd : public WND {
+class htmlview_wnd {
 	XWND						m_hWnd;
 	XINSTANCE					m_hInst;
 	int							m_top;

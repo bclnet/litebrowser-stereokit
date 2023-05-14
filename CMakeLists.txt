@@ -8,20 +8,27 @@ else()
     find_library(SHLWAPI Shlwapi.lib) 
 endif()
 
-# function: add_resource (https://stackoverflow.com/questions/11813271/embed-resources-eg-shader-code-images-into-executable-library-with-cmake)
+# function: target_link_resources (https://stackoverflow.com/questions/11813271/embed-resources-eg-shader-code-images-into-executable-library-with-cmake)
+if (NOT CMAKE_ARCHIVE_OUTPUT_DIRECTORY)
+    set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${PROJECT_BINARY_DIR}/lib")
+endif()
 set(RC_DEPENDS "")
-function(add_resource input)
-    string(MAKE_C_IDENTIFIER ${input} input_identifier)
-    set(output "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${input_identifier}.o")
-    target_link_libraries(${PROJECT_NAME} ${output})
-    add_custom_command(
-        OUTPUT ${output}
-        COMMAND ${CMAKE_LINKER} --relocatable --format binary --output ${output} ${input}
-        DEPENDS ${input}
-    )
-    set(RC_DEPENDS ${RC_DEPENDS} ${output} PARENT_SCOPE)
+message(linker: ${CMAKE_LINKER})
+function(target_link_resources target path resources)
+    foreach(input IN LISTS resources)
+        file(RELATIVE_PATH relinput ${path} ${input})
+        string(MAKE_C_IDENTIFIER ${relinput} input_identifier)
+        set(output "${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}/${input_identifier}.o")
+        target_link_libraries(${target} ${output})
+        message(${output})
+        add_custom_command(
+            OUTPUT ${output}
+            COMMAND ${CMAKE_LINKER} --relocatable --format binary --output ${output} ${input}
+            DEPENDS ${input}
+        )
+        set(RC_DEPENDS ${RC_DEPENDS} ${output} PARENT_SCOPE)
+    endforeach()
 endfunction()
-
 
 # build: release build
 #if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
@@ -93,6 +100,7 @@ set(HEADERS
     src/web_page.h
     src/message.h
 )
+file(GLOB RESOURCES src/html/*.*)
 if (UNIX)
     set(SOURCE ${SOURCE}
         src/linux/http_loader.cpp
@@ -119,6 +127,7 @@ include_directories(litebrowser
     ${StereoKitC_SOURCE_DIR}
     ${litehtml_SOURCE_DIR}/include
     ${LB_LIBS_INCLUDE_DIRS})
+target_link_resources(litebrowser ${CMAKE_CURRENT_SOURCE_DIR}/src "${RESOURCES}")
 target_link_options(litebrowser
     PRIVATE ${LB_LIBS_LDFLAGS})
 target_link_libraries(litebrowser
@@ -129,6 +138,7 @@ set_target_properties(litebrowser PROPERTIES
     CXX_STANDARD 11
     C_STANDARD 9
 )
+add_custom_target(rc ALL DEPENDS ${RC_DEPENDS})
 # msvc: add incremental builds
 if(MSVC)
     #target_compile_options(litebrowser PUBLIC "/ZI")

@@ -22,7 +22,14 @@ htmlview_wnd::~htmlview_wnd(void) {
 }
 
 LRESULT CALLBACK htmlview_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
-	htmlview_wnd* pThis = (htmlview_wnd*)&hWnd;
+	htmlview_wnd* pThis = NULL;
+	if (IsWindowX(hWnd)) {
+		pThis = (htmlview_wnd*)GetPropX(hWnd, TEXT("htmlview_this"));
+		if (pThis && pThis->m_hWnd != hWnd) {
+			pThis = NULL;
+		}
+	}
+
 	if (pThis || uMessage == WM_CREATE) {
 		switch (uMessage) {
 		case WM_PAGE_LOADED:

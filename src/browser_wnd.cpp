@@ -20,7 +20,13 @@ browser_wnd::~browser_wnd(void) {
 }
 
 LRESULT CALLBACK browser_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
-	browser_wnd* pThis = (browser_wnd*)&hWnd;
+	browser_wnd* pThis = NULL;
+	if (IsWindowX(hWnd)) {
+		pThis = (browser_wnd*)GetPropX(hWnd, TEXT("browser_this"));
+		if (pThis && pThis->m_hWnd != hWnd) {
+			pThis = NULL;
+		}
+	}
 	if (pThis || uMessage == WM_CREATE) {
 		switch (uMessage) {
 		case WM_ERASEBKGND: return TRUE;
@@ -29,7 +35,7 @@ LRESULT CALLBACK browser_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, L
 			pThis = (browser_wnd*)lpcs->lpCreateParams;
 			SetPropX(hWnd, TEXT("browser_this"), (HANDLE)pThis);
 			pThis->m_hWnd = hWnd;
-			//pThis->OnCreate();
+			pThis->OnCreate();
 			break;
 		}
 		case WM_SIZE:

@@ -5,7 +5,7 @@
 #include "litehtml/el_omnibox.h"
 class browser_wnd;
 
-class toolbar_wnd : public WND, public cairo_container {
+class toolbar_wnd : public cairo_container {
 	XWND					m_hWnd;
 	XINSTANCE				m_hInst;
 	litehtml::document::ptr	m_doc;

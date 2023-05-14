@@ -1,9 +1,16 @@
 #include "globals.h"
 #include "browser_wnd.h"
 
+static int wndi = 0;
+static WND wnds[5];
+
+BOOL IsWindowX(XWND hWnd) {
+	return hWnd ? TRUE : FALSE;
+}
+
 XWND CreateWindowX(LPCWSTR lpWindowName, int x, int y, int z, int nWidth, int nHeight, int nDepth, XWND hWndParent, LPVOID hMenu, XINSTANCE hInstance, LPVOID lpParam, WNDPROC wndproc) {
 	printf("CreateWindowX[%ls]: (%d,%d,%d).(%d,%d,%d)\n", lpWindowName, x, y, z, nWidth, nHeight, nDepth);
-	XWND hWnd = (XWND)lpParam;
+	XWND hWnd = &wnds[wndi++];
 	hWnd->parent = hWndParent;
 	hWnd->name = lpWindowName;
 	hWnd->pose = {
@@ -109,14 +116,31 @@ BOOL OpenClipboardX(XWND hWnd) {
 	return FALSE;
 }
 
+HANDLE GetPropX(XWND hWnd, LPCWSTR lpString) {
+	printf("GetPropX[%ls]: %ls\n", hWnd->name, lpString);
+	return hWnd->prop;
+}
+
 BOOL SetPropX(XWND hWnd, LPCWSTR lpString, HANDLE hData) {
 	printf("SetPropX[%ls]: %ls\n", hWnd->name, lpString);
+	hWnd->prop = hData;
 	return TRUE;
 }
 
 HANDLE RemovePropX(XWND hWnd, LPCWSTR lpString) {
 	printf("RemovePropX[%ls]: %ls\n", hWnd->name, lpString);
+	hWnd->prop = NULL;
 	return 0;
+}
+
+HWND SetCaptureX(XWND hWnd) {
+	printf("SetCaptureX[%ls]:\n", hWnd->name);
+	return 0;
+}
+
+BOOL ReleaseCaptureX() {
+	printf("ReleaseCaptureX:\n");
+	return TRUE;
 }
 
 LRESULT DefWindowProcX(XWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam) {

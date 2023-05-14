@@ -3,7 +3,7 @@
 class htmlview_wnd;
 class toolbar_wnd;
 
-class browser_wnd : public WND {
+class browser_wnd {
 	XWND				m_hWnd;
 	XINSTANCE			m_hInst;
 	htmlview_wnd*		m_view;

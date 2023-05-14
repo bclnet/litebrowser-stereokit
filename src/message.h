@@ -8,6 +8,7 @@ typedef struct tagWND {
 	sk::pose_t		pose;
 	sk::bounds_t	bounds;
 	WNDPROC			wndproc;
+	LPVOID			prop;
 } WND, * XWND;
 
 typedef struct tagRECTX {
@@ -20,6 +21,7 @@ typedef struct tagRECTX {
 #define GET_X_LPARAMX(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAMX(lp) ((int)(short)HIWORD(lp))
 
+BOOL IsWindowX(XWND hWnd);
 XWND CreateWindowX(LPCWSTR lpWindowName, int x, int y, int z, int nWidth, int nHeight, int nDepth, XWND hWndParent, LPVOID hMenu, XINSTANCE hInstance, LPVOID lpParam, WNDPROC wndproc);
 BOOL GetClientRectX(XWND hWnd, RECTX* rect);
 BOOL SetWindowPosX(XWND hWnd, XWND hWndInsertAfter, int x, int y, int z, int cx, int cy, int cz, UINT uFlags);
@@ -38,6 +40,9 @@ LRESULT SendMessageX(XWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 LRESULT SendMessageX(XWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 BOOL PostMessageX(XWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);
 BOOL OpenClipboardX(XWND hWndNewOwner);
+HANDLE GetPropX(XWND hWnd, LPCWSTR lpString);
 BOOL SetPropX(XWND hWnd, LPCWSTR lpString, HANDLE hData);
 HANDLE RemovePropX(XWND hWnd, LPCWSTR lpString);
+HWND SetCaptureX(XWND hWnd);
+BOOL ReleaseCaptureX();
 LRESULT DefWindowProcX(XWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam);

@@ -14,16 +14,23 @@ toolbar_wnd::~toolbar_wnd(void) {
 }
 
 LRESULT CALLBACK toolbar_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
-	toolbar_wnd* pThis = (toolbar_wnd*)lParam;
+	toolbar_wnd* pThis = NULL;
+	if (IsWindowX(hWnd)) {
+		pThis = (toolbar_wnd*)GetPropX(hWnd, TEXT("toolbar_this"));
+		if (pThis && pThis->m_hWnd != hWnd) {
+			pThis = NULL;
+		}
+	}
+
 	if (pThis || uMessage == WM_CREATE) {
 		switch (uMessage) {
 		case WM_EDIT_CAPTURE:
 			if (wParam) {
-				//SetCaptureX(hWnd);
+				SetCaptureX(hWnd);
 				pThis->m_inCapture = TRUE;
 			}
 			else {
-				//ReleaseCaptureX();
+				ReleaseCaptureX();
 				pThis->m_inCapture = FALSE;
 			}
 			break;
