@@ -7,7 +7,7 @@
 #define WM_EDIT_ACTIONKEY	(WM_USER + 2003)
 #define WM_EDIT_CAPTURE		(WM_USER + 2004)
 
-class CSingleLineEditCtrl : public TxThread {
+class sl_edit : public TxThread {
 private:
 	cairo_container* m_container;
 	XWND				m_parent;
@@ -29,8 +29,8 @@ private:
 	RECT				m_rcText;
 
 public:
-	CSingleLineEditCtrl(XWND parent, cairo_container* container);
-	virtual ~CSingleLineEditCtrl(void);
+	sl_edit(XWND parent, cairo_container* container);
+	virtual ~sl_edit(void);
 
 	BOOL	OnKeyDown(WPARAM wParam, LPARAM lParam);
 	BOOL	OnKeyUp(WPARAM wParam, LPARAM lParam);

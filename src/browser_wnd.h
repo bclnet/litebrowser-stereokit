@@ -6,13 +6,14 @@ class toolbar_wnd;
 class browser_wnd {
 	XWND				m_hWnd;
 	XINSTANCE			m_hInst;
-	htmlview_wnd*		m_view;
 #ifndef NO_TOOLBAR
 	toolbar_wnd*		m_toolbar;
 #endif
+	htmlview_wnd* m_view;
 public:
 	browser_wnd(XINSTANCE hInst);
 	virtual ~browser_wnd(void);
+	void init();
 	void update();
 
 	void create();

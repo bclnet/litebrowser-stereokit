@@ -22,15 +22,27 @@ typedef struct tagPAINTSTRUCTX {
 } PAINTSTRUCTX, * PPAINTSTRUCTX, * NPPAINTSTRUCTX, * LPPAINTSTRUCTX;
 
 typedef struct tagWND {
-	struct tagWND*	parent;
+	struct tagWND* parent;
 	LPCWSTR			name;
+	RECT			size;
 	sk::pose_t		pose;
 	sk::bounds_t	bounds;
+	float			aspect;
 	WNDPROC			wndproc;
 	BOOL			bErase;
 	RECTX			rcDirty;
 	std::map<std::wstring, LPVOID> props;
+	inline sk::vec2 size2() { return { l_itof(size.left), l_itof(size.top) }; }
+	inline sk::vec3 size3() { return { l_itof(size.left), l_itof(size.top), l_itof(size.right) }; }
 } WND, * XWND;
+
+typedef struct tagTOUCHPOINT {
+	float			x;
+	float			y;
+	float			z;
+	float			rx;
+	float			ry;
+} TOUCHPOINT, * PTOUCHPOINT, * NPTOUCHPOINT, * LPTOUCHPOINT;
 
 #define GET_X_LPARAMX(lp) ((int)(short)LOWORD(lp))
 #define GET_Y_LPARAMX(lp) ((int)(short)HIWORD(lp))
@@ -70,4 +82,7 @@ BOOL IntersectRectX(LPRECTX lprcDst, const RECTX* lprcSrc1, const RECTX* lprcSrc
 BOOL UnionRectX(LPRECTX lprcDst, const RECTX* lprcSrc1, const RECTX* lprcSrc2);
 BOOL GetUpdateRectX(XWND hWnd, LPRECTX lpRect, BOOL bErase);
 
-BOOL EvaluteWndX(XWND hWnd);
+// update
+BOOL EvaluteWndX(XWND hWnd, sk::bounds_t* bounds);
+BOOL ReserveLayoutX(XWND hWnd, sk::bounds_t* bounds);
+BOOL GetTouchPointX(XWND hWnd, sk::bounds_t* bounds, sk::handed_ hand, LPTOUCHPOINT lpPoint);

@@ -1,4 +1,5 @@
 #include "globals.h"
+#include "defaults.h"
 #include "browser_wnd.h"
 #include "toolbar_wnd.h"
 
@@ -13,12 +14,20 @@ toolbar_wnd::toolbar_wnd(int hInst, browser_wnd* parent) {
 toolbar_wnd::~toolbar_wnd(void) {
 }
 
+void toolbar_wnd::init() {
+	m_material = material_copy(defaults::materialUnlit);
+	m_texi = 0;
+	m_texs[0] = tex_create(tex_type_image_nomips, tex_format_bgra32);
+	tex_set_address(m_texs[0], tex_address_clamp);
+	m_texs[1] = tex_create(tex_type_image_nomips, tex_format_bgra32);
+	tex_set_address(m_texs[1], tex_address_clamp);
+}
+
 void toolbar_wnd::update() {
-	EvaluteWndX(m_hWnd);
-	ui_panel_begin();
-	ui_label("toolbar");
-	m_graph.update();
-	ui_panel_end();
+	bounds_t bounds;
+	EvaluteWndX(m_hWnd, &bounds);
+	material_set_texture(m_material, "diffuse", m_tex);
+	render_add_mesh(defaults::meshQuad, m_material, matrix_trs(bounds.center + vec3{ 0.0f, 0.0f, -0.015f }, quat_identity, bounds.dimensions));
 }
 
 LRESULT CALLBACK toolbar_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
@@ -76,12 +85,15 @@ LRESULT CALLBACK toolbar_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, L
 		case WM_PAINT: {
 			PAINTSTRUCTX ps;
 			HDC hdc = BeginPaintX(hWnd, &ps);
+			
 			simpledib::dib dib;
 			dib.beginPaint(hdc, (LPRECT)&ps.rcPaint);
 			pThis->OnPaint(&dib, &ps.rcPaint);
+			tex_set_colors(pThis->m_tex = pThis->m_texs[pThis->m_texi], dib.width(), dib.height(), dib.bits());
+			pThis->m_texi = (pThis->m_texi + 1) % 2;
 			dib.endPaint();
+
 			EndPaintX(hWnd, &ps);
-			pThis->m_graph.insertSprite((unsigned char*)dib.bits(), dib.width(), dib.height());
 			return 0;
 		}
 		case WM_KILLFOCUS:

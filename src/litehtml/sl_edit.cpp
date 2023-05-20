@@ -2,7 +2,7 @@
 #include "sl_edit.h"
 #include "ctrl_container.h"
 
-CSingleLineEditCtrl::CSingleLineEditCtrl(XWND parent, cairo_container* container) : m_textColor(0, 0, 0) {
+sl_edit::sl_edit(XWND parent, cairo_container* container) : m_textColor(0, 0, 0) {
 	m_parent = parent;
 	m_container = container;
 	m_leftPos = 0;
@@ -21,11 +21,11 @@ CSingleLineEditCtrl::CSingleLineEditCtrl(XWND parent, cairo_container* container
 	m_lineHeight = 0;
 }
 
-CSingleLineEditCtrl::~CSingleLineEditCtrl(void) {
+sl_edit::~sl_edit(void) {
 	Stop();
 }
 
-BOOL CSingleLineEditCtrl::OnKeyDown(WPARAM wParam, LPARAM lParam) {
+BOOL sl_edit::OnKeyDown(WPARAM wParam, LPARAM lParam) {
 	UINT key = (UINT)wParam;
 	switch (key) {
 	case 'A': //A
@@ -255,7 +255,7 @@ BOOL CSingleLineEditCtrl::OnKeyDown(WPARAM wParam, LPARAM lParam) {
 	return TRUE;
 }
 
-BOOL CSingleLineEditCtrl::OnChar(WPARAM wParam, LPARAM lParam) {
+BOOL sl_edit::OnChar(WPARAM wParam, LPARAM lParam) {
 	WCHAR ch = (WCHAR)wParam;
 	if (ch > 13 && ch != 27 && !(GetKeyState(VK_CONTROL) & 0x8000)) {
 		delSelection();
@@ -266,7 +266,7 @@ BOOL CSingleLineEditCtrl::OnChar(WPARAM wParam, LPARAM lParam) {
 	return TRUE;
 }
 
-void CSingleLineEditCtrl::setRect(LPRECT rcText) {
+void sl_edit::setRect(LPRECT rcText) {
 	m_width = rcText->right - rcText->left;
 	m_height = rcText->bottom - rcText->top;
 	m_rcText = *rcText;
@@ -275,7 +275,7 @@ void CSingleLineEditCtrl::setRect(LPRECT rcText) {
 	//createCaret();
 }
 
-void CSingleLineEditCtrl::draw(cairo_t* cr) {
+void sl_edit::draw(cairo_t* cr) {
 	int selStart = min(m_selStart, m_selEnd);
 	int selEnd = max(m_selStart, m_selEnd);
 
@@ -350,13 +350,13 @@ void CSingleLineEditCtrl::draw(cairo_t* cr) {
 	}
 }
 
-void CSingleLineEditCtrl::setFont(cairo_font* font, litehtml::web_color& color) {
+void sl_edit::setFont(cairo_font* font, litehtml::web_color& color) {
 	m_hFont = font;
 	m_textColor = color;
 	m_lineHeight = font->metrics().height;
 }
 
-void CSingleLineEditCtrl::UpdateCarret() {
+void sl_edit::UpdateCarret() {
 	if (m_caretPos < m_leftPos)	m_leftPos = m_caretPos;
 
 	SIZE sz = { 0, 0 };
@@ -376,13 +376,13 @@ void CSingleLineEditCtrl::UpdateCarret() {
 	UpdateControl();
 }
 
-void CSingleLineEditCtrl::UpdateControl() {
+void sl_edit::UpdateControl() {
 	if (m_parent) {
 		SendMessageX(m_parent, WM_UPDATE_CONTROL, 0, 0);
 	}
 }
 
-void CSingleLineEditCtrl::delSelection() {
+void sl_edit::delSelection() {
 	if (m_selStart < 0) return;
 	int start = min(m_selStart, m_selEnd);
 	int end = max(m_selStart, m_selEnd);
@@ -395,7 +395,7 @@ void CSingleLineEditCtrl::delSelection() {
 	UpdateControl();
 }
 
-void CSingleLineEditCtrl::setSelection(int start, int end) {
+void sl_edit::setSelection(int start, int end) {
 	m_selStart = start;
 	m_selEnd = end;
 	if (m_selEnd < 0) m_selEnd = (int)m_text.length();
@@ -422,26 +422,26 @@ void CSingleLineEditCtrl::setSelection(int start, int end) {
 	UpdateCarret();
 }
 
-void CSingleLineEditCtrl::replaceSel(LPCWSTR text) {
+void sl_edit::replaceSel(LPCWSTR text) {
 	delSelection();
 	m_text.insert(m_caretPos, text);
 }
 
-void CSingleLineEditCtrl::createCaret() {
+void sl_edit::createCaret() {
 	m_caretIsCreated = TRUE;
 	Run();
 }
 
-void CSingleLineEditCtrl::destroyCaret() {
+void sl_edit::destroyCaret() {
 	m_caretIsCreated = FALSE;
 }
 
-void CSingleLineEditCtrl::setCaretPos(int pos) {
+void sl_edit::setCaretPos(int pos) {
 	m_caretPos = pos;
 	UpdateCarret();
 }
 
-void CSingleLineEditCtrl::fillSelRect(cairo_t* cr, LPRECT rcFill) {
+void sl_edit::fillSelRect(cairo_t* cr, LPRECT rcFill) {
 	cairo_save(cr);
 
 	COLORREF clr = GetSysColor(COLOR_HIGHLIGHT);
@@ -454,7 +454,7 @@ void CSingleLineEditCtrl::fillSelRect(cairo_t* cr, LPRECT rcFill) {
 	cairo_restore(cr);
 }
 
-int CSingleLineEditCtrl::getCaretPosXY(int x, int y) {
+int sl_edit::getCaretPosXY(int x, int y) {
 	int pos = -1;
 	int w = 0;
 
@@ -483,7 +483,7 @@ int CSingleLineEditCtrl::getCaretPosXY(int x, int y) {
 	return pos;
 }
 
-void CSingleLineEditCtrl::setText(LPCWSTR text) {
+void sl_edit::setText(LPCWSTR text) {
 	m_caretPos = 0;
 	m_text = text;
 	m_selStart = -1;
@@ -497,7 +497,7 @@ void CSingleLineEditCtrl::setText(LPCWSTR text) {
 	UpdateControl();
 }
 
-void CSingleLineEditCtrl::drawText(cairo_t* cr, LPCWSTR text, int cbText, LPRECT rcText, litehtml::web_color textColor) {
+void sl_edit::drawText(cairo_t* cr, LPCWSTR text, int cbText, LPRECT rcText, litehtml::web_color textColor) {
 	std::wstring str;
 	if (cbText < 0) {
 		str = text;
@@ -517,7 +517,7 @@ void CSingleLineEditCtrl::drawText(cairo_t* cr, LPCWSTR text, int cbText, LPRECT
 	delete str_utf8;
 }
 
-void CSingleLineEditCtrl::getTextExtentPoint(LPCWSTR text, int cbText, LPSIZE sz) {
+void sl_edit::getTextExtentPoint(LPCWSTR text, int cbText, LPSIZE sz) {
 	std::wstring str;
 	if (cbText < 0) {
 		str = text;
@@ -531,7 +531,7 @@ void CSingleLineEditCtrl::getTextExtentPoint(LPCWSTR text, int cbText, LPSIZE sz
 	sz->cy = m_hFont->metrics().height;
 }
 
-DWORD CSingleLineEditCtrl::ThreadProc() {
+DWORD sl_edit::ThreadProc() {
 	m_showCaret = TRUE;
 	UINT blinkTime = GetCaretBlinkTime();
 	if (!blinkTime)	blinkTime = 500;
@@ -543,7 +543,7 @@ DWORD CSingleLineEditCtrl::ThreadProc() {
 	return 0;
 }
 
-BOOL CSingleLineEditCtrl::OnKeyUp(WPARAM wParam, LPARAM lParam) {
+BOOL sl_edit::OnKeyUp(WPARAM wParam, LPARAM lParam) {
 	UINT key = (UINT)wParam;
 	switch (key) {
 	case VK_BACK: Run(); return 0;
@@ -556,7 +556,7 @@ BOOL CSingleLineEditCtrl::OnKeyUp(WPARAM wParam, LPARAM lParam) {
 	return TRUE;
 }
 
-void CSingleLineEditCtrl::OnLButtonDown(int x, int y) {
+void sl_edit::OnLButtonDown(int x, int y) {
 	m_caretPos = getCaretPosXY(x - m_rcText.left, y - m_rcText.top);
 	setSelection(-1, m_caretPos);
 	SendMessageX(m_parent, WM_EDIT_CAPTURE, TRUE, 0);
@@ -564,14 +564,14 @@ void CSingleLineEditCtrl::OnLButtonDown(int x, int y) {
 	m_startCapture = m_caretPos;
 }
 
-void CSingleLineEditCtrl::OnLButtonUp(int x, int y) {
+void sl_edit::OnLButtonUp(int x, int y) {
 	if (m_inCapture) {
 		SendMessageX(m_parent, WM_EDIT_CAPTURE, FALSE, 0);
 		m_inCapture = FALSE;
 	}
 }
 
-void CSingleLineEditCtrl::OnLButtonDblClick(int x, int y) {
+void sl_edit::OnLButtonDblClick(int x, int y) {
 	int pos = getCaretPosXY(x - m_rcText.left, y - m_rcText.top);
 	int start = pos;
 	int end = pos;
@@ -591,25 +591,25 @@ void CSingleLineEditCtrl::OnLButtonDblClick(int x, int y) {
 	}
 }
 
-void CSingleLineEditCtrl::OnMouseMove(int x, int y) {
+void sl_edit::OnMouseMove(int x, int y) {
 	if (m_inCapture) {
 		m_caretPos = getCaretPosXY(x - m_rcText.left, y - m_rcText.top);
 		setSelection(m_startCapture, m_caretPos);
 	}
 }
 
-void CSingleLineEditCtrl::hideCaret() {
+void sl_edit::hideCaret() {
 	Stop();
 	m_showCaret = FALSE;
 	UpdateControl();
 }
 
-void CSingleLineEditCtrl::showCaret() {
+void sl_edit::showCaret() {
 	m_showCaret = TRUE;
 	createCaret();
 	UpdateControl();
 }
 
-void CSingleLineEditCtrl::set_parent(XWND parent) {
+void sl_edit::set_parent(XWND parent) {
 	m_parent = parent;
 }

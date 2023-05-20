@@ -6,28 +6,34 @@
 browser_wnd::browser_wnd(XINSTANCE hInst) {
 	m_hInst = hInst;
 	m_hWnd = NULL;
-	m_view = new htmlview_wnd(hInst, this);
 #ifndef NO_TOOLBAR
 	m_toolbar = new toolbar_wnd(hInst, this);
 #endif
+	m_view = new htmlview_wnd(hInst, this);
 }
 
 browser_wnd::~browser_wnd(void) {
-	if (m_view) delete m_view;
 #ifndef NO_TOOLBAR
 	if (m_toolbar) delete m_toolbar;
 #endif
+	if (m_view) delete m_view;
+}
+
+void browser_wnd::init() {
+#ifndef NO_TOOLBAR
+	m_toolbar->init();
+#endif
+	m_view->init();
 }
 
 void browser_wnd::update() {
-	EvaluteWndX(m_hWnd);
-	ui_window_begin("browser", m_hWnd->pose, { 1, 1 });
+	EvaluteWndX(m_hWnd, NULL);
+	auto size = m_hWnd->size2();
+	ui_window_begin("browser", m_hWnd->pose, m_hWnd->size2());
 #ifndef NO_TOOLBAR
 	m_toolbar->update();
-	m_view->update();
-#else
-	m_view->update();
 #endif
+	m_view->update();
 	ui_window_end();
 }
 
@@ -75,10 +81,10 @@ void browser_wnd::OnCreate() {
 	RECTX rcClient;
 	GetClientRectX(m_hWnd, &rcClient);
 #ifndef NO_TOOLBAR
-	m_toolbar->create(rcClient.left, rcClient.top, CW_USEDEFAULT, rcClient.right - rcClient.left, m_hWnd);
-	m_view->create(rcClient.left, rcClient.top + m_toolbar->height(), CW_USEDEFAULT, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top - m_toolbar->height(), CW_USEDEFAULT, m_hWnd);
+	m_toolbar->create(rcClient.left, rcClient.top, -500, rcClient.right - rcClient.left, m_hWnd);
+	m_view->create(rcClient.left, rcClient.top + m_toolbar->height(), -500, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top - m_toolbar->height(), 1, m_hWnd);
 #else
-	m_view->create(rcClient.left, rcClient.top, CW_USEDEFAULT, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, CW_USEDEFAULT, m_hWnd);
+	m_view->create(rcClient.left, rcClient.top, -500, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, 1, m_hWnd);
 #endif
 	SetFocusX(m_view->wnd());
 }
@@ -91,7 +97,7 @@ void browser_wnd::OnSize(int width, int height) {
 #else
 	int toolbar_height = 0;
 #endif
-	SetWindowPosX(m_view->wnd(), NULL, rcClient.left, rcClient.top + toolbar_height, rcClient.right - rcClient.left, 0, rcClient.bottom - rcClient.top - toolbar_height, 0, SWP_NOZORDER);
+	SetWindowPosX(m_view->wnd(), NULL, rcClient.left, rcClient.top + toolbar_height, 0, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top - toolbar_height, 0, SWP_NOZORDER);
 	UpdateWindowX(m_view->wnd());
 #ifndef NO_TOOLBAR
 	SetWindowPosX(m_toolbar->wnd(), NULL, rcClient.left, rcClient.top, 0, rcClient.right - rcClient.left, toolbar_height, 0, SWP_NOZORDER);
@@ -103,7 +109,7 @@ void browser_wnd::OnDestroy() {
 }
 
 void browser_wnd::create() {
-	m_hWnd = CreateWindowX(L"Light HTML", CW_USEDEFAULT, 0, CW_USEDEFAULT, CW_USEDEFAULT, 0, CW_USEDEFAULT, NULL, NULL, m_hInst, (LPVOID)this, (WNDPROC)browser_wnd::WndProc);
+	m_hWnd = CreateWindowX(L"Light HTML", CW_USEDEFAULT, 0, 0, CW_USEDEFAULT, 0, 0, NULL, NULL, m_hInst, (LPVOID)this, (WNDPROC)browser_wnd::WndProc);
 	ShowWindowX(m_hWnd, SW_SHOW);
 }
 

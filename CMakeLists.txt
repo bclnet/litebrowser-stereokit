@@ -9,6 +9,8 @@ else()
     find_library(SHLWAPI Shlwapi.lib) 
 endif()
 
+option(NO_TOOLBAR "No Toolbar" OFF)
+
 # build: release build
 #if (NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
 #    set(CMAKE_BUILD_TYPE "Release")
@@ -58,15 +60,16 @@ set(SOURCE
     ${CONTAINERS}/cairo/cairo_font.cpp
     src/litehtml/el_omnibox.cpp
     src/litehtml/sl_edit.cpp
+    src/browser_wnd.cpp
+    src/defaults.cpp
+    src/html.cpp
+    src/htmlview_wnd.cpp
     src/main.cpp
     src/message.cpp
     src/object_graph.cpp
-    src/browser_wnd.cpp
-    src/htmlview_wnd.cpp
     src/toolbar_wnd.cpp
     src/web_history.cpp
     src/web_page.cpp
-    src/html.cpp
 )
 set(HEADERS
     #${CONTAINERS}/stereokit/container_stereokit.h
@@ -74,8 +77,9 @@ set(HEADERS
     ${CONTAINERS}/cairo/cairo_font.cpp
     src/litehtml/el_omnibox.h
     src/litehtml/sl_edit.h
-    src/globals.h
     src/browser_wnd.h
+    src/defaults.h
+    src/globals.h
     src/htmlview_wnd.h
     src/message.h
     src/object_graph.h
@@ -105,6 +109,9 @@ endif()
 # executable
 add_executable(litebrowser ${SOURCE} ${HEADERS})
 target_compile_definitions(litebrowser PUBLIC UNICODE)
+if (NO_TOOLBAR)
+    target_compile_definitions(litebrowser PUBLIC NO_TOOLBAR)
+endif()
 include_directories(litebrowser
     ${StereoKitC_SOURCE_DIR}
     ${litehtml_SOURCE_DIR}/include

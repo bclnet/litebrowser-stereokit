@@ -4,7 +4,7 @@
 #define WM_OMNIBOX_CLICKED	(WM_USER + 10002)
 
 class el_omnibox : public litehtml::html_tag {
-	CSingleLineEditCtrl m_edit;
+	sl_edit m_edit;
 	XWND m_hWndParent;
 	BOOL m_haveFocus;
 public:

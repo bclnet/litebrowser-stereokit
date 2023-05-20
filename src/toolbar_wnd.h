@@ -14,10 +14,14 @@ class toolbar_wnd : public cairo_container {
 	std::shared_ptr<el_omnibox>	m_omnibox;
 	litehtml::string		m_cursor;
 	BOOL					m_inCapture;
-	object_graph			m_graph;
+	material_t				m_material;
+	tex_t					m_tex;
+	int						m_texi;
+	tex_t					m_texs[2];
 public:
 	toolbar_wnd(XINSTANCE hInst, browser_wnd* parent);
 	virtual ~toolbar_wnd(void);
+	void init();
 	void update();
 
 	void create(int x, int y, int z, int width, XWND parent);

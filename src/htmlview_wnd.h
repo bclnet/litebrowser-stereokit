@@ -10,22 +10,26 @@ using namespace litehtml;
 class browser_wnd;
 
 class htmlview_wnd {
-	XWND						m_hWnd;
-	XINSTANCE					m_hInst;
-	int							m_top;
-	int							m_left;
-	int							m_max_top;
-	int							m_max_left;
-	web_history					m_history;
-	web_page*					m_page;
-	web_page*					m_page_next;
-	CRITICAL_SECTION			m_sync;
-	simpledib::dib				m_dib;
-	browser_wnd*				m_parent;
-	object_graph				m_graph;
+	XWND					m_hWnd;
+	XINSTANCE				m_hInst;
+	int						m_top;
+	int						m_left;
+	int						m_max_top;
+	int						m_max_left;
+	web_history				m_history;
+	web_page*				m_page;
+	web_page*				m_page_next;
+	CRITICAL_SECTION		m_sync;
+	simpledib::dib			m_dib;
+	browser_wnd*			m_parent;
+	material_t				m_material;
+	tex_t					m_tex;
+	int						m_texi;
+	tex_t					m_texs[2];
 public:
 	htmlview_wnd(XINSTANCE hInst, browser_wnd* parent);
 	virtual ~htmlview_wnd(void);
+	void init();
 	void update();
 
 	void				create(int x, int y, int z, int width, int height, int depth, XWND parent);

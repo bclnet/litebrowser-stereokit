@@ -1,4 +1,5 @@
 #include "globals.h"
+#include "defaults.h"
 #include "browser_wnd.h"
 #include "htmlview_wnd.h"
 #include <strsafe.h>
@@ -21,11 +22,20 @@ htmlview_wnd::~htmlview_wnd(void) {
 	DeleteCriticalSection(&m_sync);
 }
 
+void htmlview_wnd::init() {
+	m_material = material_copy(defaults::materialUnlit);
+	m_texi = 0;
+	m_texs[0] = tex_create(tex_type_image_nomips, tex_format_bgra32);
+	tex_set_address(m_texs[0], tex_address_clamp);
+	m_texs[1] = tex_create(tex_type_image_nomips, tex_format_bgra32);
+	tex_set_address(m_texs[1], tex_address_clamp);
+}
+
 void htmlview_wnd::update() {
-	EvaluteWndX(m_hWnd);
-	ui_panel_begin();
-	m_graph.update();
-	ui_panel_end();
+	bounds_t bounds;
+	EvaluteWndX(m_hWnd, &bounds);
+	material_set_texture(m_material, "diffuse", m_tex);
+	render_add_mesh(defaults::meshQuad, m_material, matrix_trs(bounds.center + vec3{ 0.0f, 0.0f, -0.015f }, quat_identity, bounds.dimensions));
 }
 
 LRESULT CALLBACK htmlview_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, LPARAM lParam) {
@@ -70,13 +80,13 @@ LRESULT CALLBACK htmlview_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, 
 
 			PAINTSTRUCTX ps;
 			HDC hdc = BeginPaintX(hWnd, &ps);
-			pThis->OnPaint(&pThis->m_dib, &ps.rcPaint);
-			BitBlt(hdc, ps.rcPaint.left, ps.rcPaint.top,
-				ps.rcPaint.right - ps.rcPaint.left,
-				ps.rcPaint.bottom - ps.rcPaint.top, pThis->m_dib, ps.rcPaint.left, ps.rcPaint.top, SRCCOPY);
-			EndPaintX(hWnd, &ps);
+
 			simpledib::dib* dib = &pThis->m_dib;
-			pThis->m_graph.insertSprite((unsigned char*)dib->bits(), dib->width(), dib->height());
+			pThis->OnPaint(dib, &ps.rcPaint);
+			tex_set_colors(pThis->m_tex = pThis->m_texs[pThis->m_texi], dib->width(), dib->height(), dib->bits());
+			pThis->m_texi = (pThis->m_texi + 1) % 2;
+
+			EndPaintX(hWnd, &ps);
 			return 0;
 		}
 		case WM_SIZE:

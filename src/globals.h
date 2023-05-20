@@ -1,5 +1,8 @@
 #pragma once
 
+inline int l_ftoi(float s) { return (int)(s * 1000); }
+inline float l_itof(int s) { return (float)(s / 1000.0f); }
+
 #if defined(_WIN32) || defined(WIN32)
 
 //#define UNICODE
