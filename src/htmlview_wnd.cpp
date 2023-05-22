@@ -22,15 +22,6 @@ htmlview_wnd::~htmlview_wnd(void) {
 	DeleteCriticalSection(&m_sync);
 }
 
-void htmlview_wnd::init() {
-	m_material = material_copy(defaults::materialUnlit);
-	m_texi = 0;
-	m_texs[0] = tex_create(tex_type_image_nomips, tex_format_bgra32);
-	tex_set_address(m_texs[0], tex_address_clamp);
-	m_texs[1] = tex_create(tex_type_image_nomips, tex_format_bgra32);
-	tex_set_address(m_texs[1], tex_address_clamp);
-}
-
 void htmlview_wnd::update() {
 	bounds_t bounds;
 	EvaluteWndX(m_hWnd, &bounds);
@@ -140,6 +131,12 @@ LRESULT CALLBACK htmlview_wnd::WndProc(XWND hWnd, UINT uMessage, WPARAM wParam, 
 }
 
 void htmlview_wnd::OnCreate() {
+	m_material = material_copy(defaults::materialUnlit);
+	m_texi = 0;
+	m_texs[0] = tex_create(tex_type_image_nomips, tex_format_bgra32);
+	tex_set_address(m_texs[0], tex_address_clamp);
+	m_texs[1] = tex_create(tex_type_image_nomips, tex_format_bgra32);
+	tex_set_address(m_texs[1], tex_address_clamp);
 }
 
 void htmlview_wnd::OnPaint(simpledib::dib* dib, LPRECTX rcDraw) {

@@ -1,7 +1,6 @@
 #pragma once
 #include "web_page.h"
 #include "web_history.h"
-#include "object_graph.h"
 
 #define WM_IMAGE_LOADED		(WM_USER + 1000)
 #define WM_PAGE_LOADED		(WM_USER + 1001)
@@ -29,7 +28,6 @@ class htmlview_wnd {
 public:
 	htmlview_wnd(XINSTANCE hInst, browser_wnd* parent);
 	virtual ~htmlview_wnd(void);
-	void init();
 	void update();
 
 	void				create(int x, int y, int z, int width, int height, int depth, XWND parent);

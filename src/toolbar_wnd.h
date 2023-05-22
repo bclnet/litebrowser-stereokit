@@ -3,7 +3,6 @@
 #include "../containers/cairo/cairo_container.h"
 #include "dib.h"
 #include "litehtml/el_omnibox.h"
-#include "object_graph.h"
 class browser_wnd;
 
 class toolbar_wnd : public cairo_container {
@@ -21,7 +20,6 @@ class toolbar_wnd : public cairo_container {
 public:
 	toolbar_wnd(XINSTANCE hInst, browser_wnd* parent);
 	virtual ~toolbar_wnd(void);
-	void init();
 	void update();
 
 	void create(int x, int y, int z, int width, XWND parent);

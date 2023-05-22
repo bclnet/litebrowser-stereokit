@@ -10,26 +10,13 @@ browser_wnd browser(0);
 
 CRITICAL_SECTION cairo_font::m_sync;
 
-#pragma region MODEL
-//mesh_t     cube_mesh;
-//material_t cube_mat;
-//pose_t     cube_pose = { {0, 0, -0.5f}, quat_identity };
-//: init
-//cube_mesh = mesh_gen_rounded_cube(vec3_one * 0.1f, 0.02f, 4);
-//cube_mat = material_find(default_id_material_ui);
-//: render
-//ui_handle_begin("Cube", cube_pose, mesh_get_bounds(cube_mesh), false);
-//render_add_mesh(cube_mesh, cube_mat, matrix_identity);
-//ui_handle_end();
-#pragma endregion
-
-#pragma region LOG
+#pragma region Log
 
 pose_t log_pose = { {-0.75f, -0.1f, -0.5f}, quat_lookat(vec3_zero, vec3_forward) };
 vector<string> log_list;
 string log_text = "";
 
-void OnLog(log_ level, const char* text) {
+void log_handler(log_ level, const char* text) {
 	if (log_list.size() > 15) log_list.erase(log_list.end() - 1);
 	log_list.insert(log_list.begin(), strlen(text) < 100 ? std::string(text) : std::string(text, 100) + "...");
 	stringstream b;
@@ -37,10 +24,36 @@ void OnLog(log_ level, const char* text) {
 	log_text = b.str();
 }
 
-void LogWindow() {
+void log_update() {
 	ui_window_begin("Log", log_pose, vec2{ 40.0f, 0.0f }*0.01f);
 	ui_text(log_text.c_str());
 	ui_window_end();
+}
+
+#pragma endregion
+
+#pragma region Floor
+
+shader_t floor_shader;
+material_t floor_material;
+
+void floor_create() {
+	floor_shader = shader_create_file("floor.hlsl");
+	floor_material = material_create(floor_shader);
+	material_set_transparency(floor_material, transparency_blend);
+}
+
+void floor_update() {
+	if (sk_system_info().display_type != display_blend_opaque) return;
+	matrix *transform;
+	if (world_has_bounds()) {
+		pose_t pose = world_get_bounds_pose();
+		transform = &matrix_trs(pose.position, pose.orientation, { 30.f, 0.1f, 30.0f });
+	}
+	else {
+		transform = &matrix_trs({ 0.0f, -1.5f, 0.0f }, quat_identity, { 30.f, 0.1f, 30.0f });
+	}
+	mesh_draw(defaults::meshCube, floor_material, *transform);
 }
 
 #pragma endregion
@@ -55,28 +68,23 @@ int main(int argc, char* argv[]) {
 	GdiplusStartup(&gdiplusToken, &gdiplusStartupInput, NULL);
 #endif
 
-	log_subscribe(OnLog);
+	log_subscribe(log_handler);
 
 	sk_settings_t settings = {};
 	settings.app_name = "litebrowser";
-	settings.assets_folder = "Assets";
+	settings.assets_folder = "assets";
 	settings.display_preference = display_mode_mixedreality;
 	if (!sk_init(settings))
 		return 1;
 
-	defaults::init();
-	browser.init();
+	floor_create();
+	defaults::create();
 	browser.create();
-	if (argc > 1) {
-		browser.open((LPCWSTR)argv[0]);
-	}
-	else {
-		browser.open(L"http://www.litehtml.com/");
-		//browser.open(L"https://dmoz-odp.org/");
-	}
+	browser.open(argc > 1 ? (LPCWSTR)argv[0] : L"http://www.litehtml.com/");
 
 	sk_run([]() {
-		LogWindow();
+		floor_update();
+		log_update();
 		browser.update();
 		});
 

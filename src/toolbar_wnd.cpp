@@ -14,15 +14,6 @@ toolbar_wnd::toolbar_wnd(int hInst, browser_wnd* parent) {
 toolbar_wnd::~toolbar_wnd(void) {
 }
 
-void toolbar_wnd::init() {
-	m_material = material_copy(defaults::materialUnlit);
-	m_texi = 0;
-	m_texs[0] = tex_create(tex_type_image_nomips, tex_format_bgra32);
-	tex_set_address(m_texs[0], tex_address_clamp);
-	m_texs[1] = tex_create(tex_type_image_nomips, tex_format_bgra32);
-	tex_set_address(m_texs[1], tex_address_clamp);
-}
-
 void toolbar_wnd::update() {
 	bounds_t bounds;
 	EvaluteWndX(m_hWnd, &bounds);
@@ -182,6 +173,12 @@ void toolbar_wnd::update_cursor() {
 }
 
 void toolbar_wnd::OnCreate() {
+	m_material = material_copy(defaults::materialUnlit);
+	m_texi = 0;
+	m_texs[0] = tex_create(tex_type_image_nomips, tex_format_bgra32);
+	tex_set_address(m_texs[0], tex_address_clamp);
+	m_texs[1] = tex_create(tex_type_image_nomips, tex_format_bgra32);
+	tex_set_address(m_texs[1], tex_address_clamp);
 }
 
 void toolbar_wnd::OnPaint(simpledib::dib* dib, LPRECTX rcDraw) {

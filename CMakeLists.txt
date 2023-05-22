@@ -22,6 +22,7 @@ set(SK_BUILD_TESTS       OFF CACHE INTERNAL "")
 set(SK_BUILD_SHARED_LIBS OFF CACHE INTERNAL "")
 FetchContent_Declare(StereoKitC GIT_REPOSITORY https://github.com/StereoKit/StereoKit.git GIT_TAG v0.3.6)
 FetchContent_MakeAvailable(StereoKitC)
+set(StereoKitTools ${stereokitc_SOURCE_DIR}/Tools)
 
 # module: add cairo
 if (UNIX)
@@ -66,7 +67,6 @@ set(SOURCE
     src/htmlview_wnd.cpp
     src/main.cpp
     src/message.cpp
-    src/object_graph.cpp
     src/toolbar_wnd.cpp
     src/web_history.cpp
     src/web_page.cpp
@@ -82,7 +82,6 @@ set(HEADERS
     src/globals.h
     src/htmlview_wnd.h
     src/message.h
-    src/object_graph.h
     src/toolbar_wnd.h
     src/web_history.h
     src/web_page.h
@@ -108,7 +107,7 @@ endif()
 
 # executable
 add_executable(litebrowser ${SOURCE} ${HEADERS})
-target_compile_definitions(litebrowser PUBLIC UNICODE)
+target_compile_definitions(litebrowser PUBLIC UNICODE PUBLIC _UNICODE)
 if (NO_TOOLBAR)
     target_compile_definitions(litebrowser PUBLIC NO_TOOLBAR)
 endif()
@@ -132,6 +131,13 @@ if(MSVC)
     #target_compile_options(litebrowser PUBLIC "/ZI")
     target_link_options(litebrowser PUBLIC "/INCREMENTAL")
 endif()
+
+# build assets
+add_custom_command(TARGET litebrowser PRE_BUILD 
+    COMMAND "${StereoKitTools}/skshaderc.exe"
+    -o3 -t xgew -i "${StereoKitTools}/include"
+    -o "${CMAKE_BINARY_DIR}/assets"
+    "${litebrowser_SOURCE_DIR}/src/assets/*.hlsl")
 
 # copy dll
 add_custom_command(TARGET litebrowser POST_BUILD 

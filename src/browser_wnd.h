@@ -13,7 +13,6 @@ class browser_wnd {
 public:
 	browser_wnd(XINSTANCE hInst);
 	virtual ~browser_wnd(void);
-	void init();
 	void update();
 
 	void create();

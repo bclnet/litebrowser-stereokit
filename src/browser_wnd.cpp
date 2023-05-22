@@ -19,16 +19,8 @@ browser_wnd::~browser_wnd(void) {
 	if (m_view) delete m_view;
 }
 
-void browser_wnd::init() {
-#ifndef NO_TOOLBAR
-	m_toolbar->init();
-#endif
-	m_view->init();
-}
-
 void browser_wnd::update() {
 	EvaluteWndX(m_hWnd, NULL);
-	auto size = m_hWnd->size2();
 	ui_window_begin("browser", m_hWnd->pose, m_hWnd->size2());
 #ifndef NO_TOOLBAR
 	m_toolbar->update();
